@@ -31,7 +31,7 @@ public class PlanController {
 
         try {
 
-            Plan iva = Plan.builder()
+            Plan plan = Plan.builder()
                     .nombre(nombre)
                     .cantidad(Integer.parseInt(cantidad))
                     .precio(Double.parseDouble(precio))
@@ -40,7 +40,7 @@ public class PlanController {
                     .status(Status.ONLINE)
                     .build();
 
-            Respuesta response = service.save(iva);
+            Respuesta response = service.save(plan);
 
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok(Respuesta.builder()
@@ -64,6 +64,7 @@ public class PlanController {
 
     @PatchMapping("/update")
     public ResponseEntity<Respuesta> update(
+            @RequestParam("idPlan") String idPlan,
             @RequestParam("nombre") String nombre,
             @RequestParam("cantidad") String cantidad,
             @RequestParam("precio") String precio,
@@ -73,7 +74,8 @@ public class PlanController {
 
         try {
 
-            Plan iva = Plan.builder()
+            Plan plan = Plan.builder()
+                    .idPlan(Integer.parseInt(idPlan))
                     .nombre(nombre)
                     .cantidad(Integer.parseInt(cantidad))
                     .precio(Double.parseDouble(precio))
@@ -82,7 +84,7 @@ public class PlanController {
                     .status(Status.valueOf(status.toUpperCase()))
                     .build();
 
-            Respuesta response = service.save(iva);
+            Respuesta response = service.update(plan);
 
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok(Respuesta.builder()

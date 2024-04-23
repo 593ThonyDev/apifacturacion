@@ -83,6 +83,12 @@ public class PlanServiceImpl implements PlanService {
                     .build();
         }
 
+        if (plan.getIdPlan() <= 0 || plan.getIdPlan() == null) {
+            return Respuesta.builder()
+                    .message("Agregue el nombre del plan")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
         if (plan.getNombre().isEmpty()) {
             return Respuesta.builder()
                     .message("Agregue el nombre del plan")
@@ -123,7 +129,7 @@ public class PlanServiceImpl implements PlanService {
         repository.save(plan);
 
         return Respuesta.builder()
-                .message("Registro guardado con exito")
+                .message("Cambios guardados con exito")
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
