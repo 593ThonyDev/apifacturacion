@@ -3,7 +3,9 @@ package softech.apifacturacion.persistence.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.*;
-import softech.apifacturacion.status.*;
+import softech.apifacturacion.persistence.enums.ProductSubcidio;
+import softech.apifacturacion.persistence.enums.ProductTipo;
+import softech.apifacturacion.persistence.enums.Status;
 
 import lombok.*;
 

@@ -1,4 +1,4 @@
-package softech.apifacturacion.status;
+package softech.apifacturacion.persistence.enums;
 
 public enum ProductTipo {
     BIEN,

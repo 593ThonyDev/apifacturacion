@@ -7,12 +7,12 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import lombok.*;
+import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Iva;
 import softech.apifacturacion.persistence.repository.IvaRepository;
 import softech.apifacturacion.persistence.service.IvaService;
 import softech.apifacturacion.response.Respuesta;
 import softech.apifacturacion.response.RespuestaType;
-import softech.apifacturacion.status.Status;
 
 @Service
 @RequiredArgsConstructor

@@ -16,7 +16,7 @@ public class DetalleFactura {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "idfactura")
+    @Column(name = "iddetallefactura")
     Integer idDetalleFactura;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

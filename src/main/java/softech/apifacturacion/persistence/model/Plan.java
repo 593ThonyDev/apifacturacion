@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.*;
-import softech.apifacturacion.status.Status;
+import softech.apifacturacion.persistence.enums.Status;
 
 @Data
 @Builder

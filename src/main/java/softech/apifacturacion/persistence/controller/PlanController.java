@@ -4,35 +4,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.model.Iva;
-import softech.apifacturacion.persistence.service.IvaService;
+import softech.apifacturacion.persistence.model.Plan;
+import softech.apifacturacion.persistence.service.PlanService;
 import softech.apifacturacion.response.*;
 
 @RestController
-@RequestMapping("/facturacion/v1/iva")
-public class IvaController {
+@RequestMapping("/facturacion/v1/plan")
+public class PlanController {
 
     private static final Logger logger = LoggerFactory.getLogger(IvaController.class);
 
     @Autowired
-    private IvaService service;
+    private PlanService service;
 
     @PostMapping("/save")
     public ResponseEntity<Respuesta> save(
             @RequestParam("nombre") String nombre,
-            @RequestParam("codigoPorcentaje") String codigoPorcentaje,
-            @RequestParam("tarifa") String tarifa) {
+            @RequestParam("cantidad") String cantidad,
+            @RequestParam("precio") String precio,
+            @RequestParam("periodo") String periodo,
+            @RequestParam("descripcion") String descripcion) {
 
         try {
 
-            Iva iva = Iva.builder()
+            Plan iva = Plan.builder()
                     .nombre(nombre)
-                    .codigoPorcentaje(codigoPorcentaje)
-                    .tarifa(Double.parseDouble(tarifa))
+                    .cantidad(Integer.parseInt(cantidad))
+                    .precio(Double.parseDouble(precio))
+                    .periodo(periodo)
+                    .descripcion(descripcion)
+                    .status(Status.ONLINE)
                     .build();
 
             Respuesta response = service.save(iva);
@@ -59,21 +64,25 @@ public class IvaController {
 
     @PatchMapping("/update")
     public ResponseEntity<Respuesta> update(
-            @RequestParam("idIva") String idIva,
             @RequestParam("nombre") String nombre,
-            @RequestParam("codigoPorcentaje") String codigoPorcentaje,
-            @RequestParam("tarifa") String tarifa) {
+            @RequestParam("cantidad") String cantidad,
+            @RequestParam("precio") String precio,
+            @RequestParam("periodo") String periodo,
+            @RequestParam("status") String status,
+            @RequestParam("descripcion") String descripcion) {
 
         try {
 
-            Iva iva = Iva.builder()
-                    .idIva(Integer.parseInt(idIva))
+            Plan iva = Plan.builder()
                     .nombre(nombre)
-                    .codigoPorcentaje(codigoPorcentaje)
-                    .tarifa(Double.parseDouble(tarifa))
+                    .cantidad(Integer.parseInt(cantidad))
+                    .precio(Double.parseDouble(precio))
+                    .periodo(periodo)
+                    .descripcion(descripcion)
+                    .status(Status.valueOf(status.toUpperCase()))
                     .build();
 
-            Respuesta response = service.update(iva);
+            Respuesta response = service.save(iva);
 
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok(Respuesta.builder()
@@ -93,41 +102,12 @@ public class IvaController {
                     .build());
         }
 
-    }
-
-    @PatchMapping("/changeStatus")
-    public ResponseEntity<Respuesta> updateStatus(
-            @RequestParam("idIva") String idIva,
-            @RequestParam("status") String statusRequest) {
-
-        try {
-
-            Respuesta response = service.changeStatus(Integer.parseInt(idIva),
-                    statusRequest == "ONLINE" ? Status.ONLINE : Status.OFFLINE);
-
-            if (response.getType() == RespuestaType.SUCCESS) {
-                return ResponseEntity.ok(Respuesta.builder()
-                        .message(response.getMessage())
-                        .build());
-            } else {
-                logger.error(response.getMessage());
-                return ResponseEntity.badRequest().body(Respuesta.builder()
-                        .message(response.getMessage())
-                        .build());
-            }
-
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage().toString());
-            return ResponseEntity.internalServerError().body(Respuesta.builder()
-                    .message("Error interno del servidor")
-                    .build());
-        }
     }
 
     @GetMapping("/getData")
-    public ResponseEntity<Page<Iva>> getAll(Pageable pageable) {
+    public ResponseEntity<Page<Plan>> getAll(Pageable pageable) {
         try {
-            Page<Iva> pagina = service.getAll(pageable);
+            Page<Plan> pagina = service.getAll(pageable);
             if (pagina != null && pagina.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else if (pagina != null) {
@@ -139,7 +119,6 @@ public class IvaController {
             logger.error(e.getLocalizedMessage().toString());
             return ResponseEntity.internalServerError().build();
         }
-
     }
 
 }

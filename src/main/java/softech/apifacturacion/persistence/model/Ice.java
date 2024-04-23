@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.*;
 import lombok.*;
-import softech.apifacturacion.status.Status;
+import softech.apifacturacion.persistence.enums.Status;
 
 @Data
 @Builder
@@ -16,8 +16,8 @@ public class Ice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "idiva")
-    Integer idIva;
+    @Column(name = "idice")
+    Integer idIce;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "codigoporcentaje")

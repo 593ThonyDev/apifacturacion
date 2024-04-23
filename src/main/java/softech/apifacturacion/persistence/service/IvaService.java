@@ -2,9 +2,9 @@ package softech.apifacturacion.persistence.service;
 
 import org.springframework.data.domain.*;
 
+import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Iva;
 import softech.apifacturacion.response.Respuesta;
-import softech.apifacturacion.status.Status;
 
 public interface IvaService {
 

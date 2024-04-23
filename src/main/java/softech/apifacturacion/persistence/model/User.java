@@ -1,17 +1,11 @@
 package softech.apifacturacion.persistence.model;
 
-import java.util.*;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.*;
 import lombok.*;
-import softech.apifacturacion.persistence.role.Role;
-import softech.apifacturacion.status.UserStatus;
+import softech.apifacturacion.persistence.enums.Role;
+import softech.apifacturacion.persistence.enums.UserStatus;
 
 @Data
 @Builder
@@ -19,7 +13,7 @@ import softech.apifacturacion.status.UserStatus;
 @AllArgsConstructor
 @Entity
 @Table(name = "user")
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +34,10 @@ public class User implements UserDetails {
     @Column(name = "password")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String password;
+    
+    @Column(name = "login")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String login;
 
     @Column(name = "email")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -53,50 +51,15 @@ public class User implements UserDetails {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String apellidos;
 
-    @Column(name = "role")
+    @Column(name = "role", length = 50)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Enumerated(EnumType.STRING)
-    Role role;
-
-    @Column(name = "status")
+    private Role role;
+    
+    @Column(name = "status", length = 50)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Enumerated(EnumType.STRING)
-    UserStatus status;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(role.name()));
-        return authorities;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        if (status == UserStatus.ONLINE) {
-            return true;
-        }
-        if (status == UserStatus.UPDATE_PASS) {
-            return true;
-        } else if (status == UserStatus.OFFLINE) {
-            return false;
-        } else {
-            return false;
-        }
-    }
+    private UserStatus status;
+    
 
 }

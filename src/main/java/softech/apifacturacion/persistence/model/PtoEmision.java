@@ -2,9 +2,9 @@ package softech.apifacturacion.persistence.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import ch.qos.logback.core.status.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import softech.apifacturacion.persistence.enums.Status;
 
 @Data
 @Builder

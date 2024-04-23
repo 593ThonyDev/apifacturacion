@@ -18,7 +18,7 @@ public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "idproducto")
+    @Column(name = "idcliente")
     Integer idCliente;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
