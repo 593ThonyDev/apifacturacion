@@ -5,17 +5,14 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
-import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.enums.TipoEmision;
+import softech.apifacturacion.persistence.enums.*;
 import softech.apifacturacion.persistence.function.Fecha;
-import softech.apifacturacion.persistence.model.Emisor;
-import softech.apifacturacion.persistence.model.Plan;
-import softech.apifacturacion.persistence.repository.EmisorRepossitory;
-import softech.apifacturacion.persistence.repository.PlanRepository;
-import softech.apifacturacion.persistence.service.EmisorService;
+import softech.apifacturacion.persistence.model.*;
+import softech.apifacturacion.persistence.model.dto.SignUpEmisorDto;
+import softech.apifacturacion.persistence.repository.*;
+import softech.apifacturacion.persistence.service.*;
 import softech.apifacturacion.response.*;
-import softech.apifacturacion.upload.UploadImage;
-import softech.apifacturacion.upload.UploadSignature;
+import softech.apifacturacion.upload.*;
 
 public class EmisorServiceImpl implements EmisorService {
 
@@ -29,10 +26,13 @@ public class EmisorServiceImpl implements EmisorService {
     UploadImage imageUpload;
 
     @Autowired
-    UploadSignature signatureUpload;
+    UploadSignature firmaUpload;
+
+    @Autowired
+    UserService userService;
 
     @Override
-    public Respuesta registerEmisor(Emisor emisor, String nombres, String apellidos) {
+    public Respuesta registerEmisor(Emisor emisor, String nombres, String apellidos, String password) {
 
         Optional<Emisor> optional = repository.findByRuc(emisor.getRuc());
 
@@ -142,9 +142,31 @@ public class EmisorServiceImpl implements EmisorService {
          */
         repository.save(emisor);
 
+        SignUpEmisorDto user = SignUpEmisorDto.builder()
+                .username(emisor.getRuc())
+                .password(password.toCharArray())
+                .email(emisor.getCorreoRemitente())
+                .nombres(nombres)
+                .apellidos(apellidos)
+                .build();
+
+        /*
+         * Nos comunicamos con el servicio que genera el usuario
+         */
+        Respuesta response = userService.register(user);
+
+        /*
+         * si no se guarda o genera un error los datos se eliminan
+         */
+        if (response.getType() == RespuestaType.WARNING) {
+            // se elimina el registro de la base de datos para que se pueda reiniciar el registro con otra solicitud
+            repository.deleteById(repository.findByRuc(emisor.getRuc()).get().getIdEmisor());
+            return response;
+        }
+
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)
-                .message("Regsitro guardado correctamente")
+                .message("Registro guardado correctamente")
                 .build();
     }
 
@@ -158,36 +180,72 @@ public class EmisorServiceImpl implements EmisorService {
                     .message("No existe el registro con el ruc indicado")
                     .build();
         }
-
         if (emisor.getRazonSocial().isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar el email para recibir los comprobantes generados")
+                    .build();
+        } else {
+            optional.get().setRazonSocial(emisor.getRazonSocial());
         }
         if (emisor.getNombreComercial().isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar el nombre comercial de la empresa")
+                    .build();
+        } else {
+            optional.get().setNombreComercial(emisor.getNombreComercial());
+            ;
         }
         if (emisor.getDireccionMatriz().isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar el nombre comercial de la empresa")
+                    .build();
+        } else {
+            optional.get().setDireccionMatriz(emisor.getDireccionMatriz());
         }
-
         if (emisor.getObligadoContabilidad().isEmpty()) {
-
-        }
-        if (emisor.getAgenteRetencion().isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe seleccionar si esta obligado a llevar contabilidad")
+                    .build();
+        } else {
+            optional.get().setObligadoContabilidad(emisor.getObligadoContabilidad());
         }
         if (emisor.getTipoContribuyente().isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe seleccionar el tipo de contribuyente")
+                    .build();
+        } else {
+            optional.get().setTipoContribuyente(emisor.getTipoContribuyente());
+        }
+        if (emisor.getPassFirma().isEmpty()) {
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar la clave de la firma electronica")
+                    .build();
+        } else {
+            optional.get().setPassFirma(emisor.getPassFirma());
         }
         if (logo.isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar el logotipo de la empresa")
+                    .build();
+        } else {
+            optional.get().setDirLogo(imageUpload.addImage(optional.get().getRuc(), "logoEmisor", logo));
         }
         if (firma.isEmpty()) {
-
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe agregar la firma electronica")
+                    .build();
+        } else {
+            optional.get()
+                    .setDirFirma(firmaUpload.addSignature(optional.get().getRuc(), optional.get().getRuc(), firma));
         }
-
-        optional.get().setDirLogo(imageUpload.addImage(optional.get().getRuc(), "logoEmisor", logo));
-        optional.get()
-                .setDirFirma(signatureUpload.addSignature(optional.get().getRuc(), optional.get().getRuc(), firma));
 
         /*
          * Se debe enviar el mail al usuario los datos de la empresa que ha sido
@@ -195,9 +253,10 @@ public class EmisorServiceImpl implements EmisorService {
          */
 
         repository.save(optional.get());
+
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)
-                .message("Regsitro actualizado correctamente")
+                .message("Registro actualizado correctamente")
                 .build();
     }
 
