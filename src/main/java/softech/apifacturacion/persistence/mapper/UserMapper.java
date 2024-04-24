@@ -10,6 +10,7 @@ import softech.apifacturacion.persistence.model.dto.UserDto;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(target = "token", ignore = true)
     UserDto toUserDto(User user);
 
     @Mapping(target = "password", ignore = true)

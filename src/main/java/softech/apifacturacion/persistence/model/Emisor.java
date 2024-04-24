@@ -127,7 +127,7 @@ public class Emisor {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "cantusada")
-    String cantidadUsada;
+    Integer cantidadUsada;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "created")
