@@ -89,24 +89,8 @@ public class Emisor {
     String passFirma;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "servercorreo")
-    String serverCorreo;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "correoremitente")
     String correoRemitente;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "passcorreo")
-    String passCorreo;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "puerto")
-    Integer puerto;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "ssl")
-    String ssl;
 
     @Column(name = "status")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -126,7 +110,7 @@ public class Emisor {
     Integer cantidadContratada;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "cantusada")
+    @Column(name = "cantidadusada")
     Integer cantidadUsada;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

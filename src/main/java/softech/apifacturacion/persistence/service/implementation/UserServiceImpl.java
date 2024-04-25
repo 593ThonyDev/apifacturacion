@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Respuesta register(SignUpEmisorDto userDto) {
+    public Respuesta register(UserRequestDto userDto) {
 
         Optional<User> optionalUser = userRepository.findByUsername(userDto.getLogin());
 

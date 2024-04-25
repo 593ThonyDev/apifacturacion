@@ -2,19 +2,27 @@ package softech.apifacturacion.persistence.service.implementation;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.RequiredArgsConstructor;
 import softech.apifacturacion.persistence.enums.*;
 import softech.apifacturacion.persistence.function.Fecha;
 import softech.apifacturacion.persistence.model.*;
-import softech.apifacturacion.persistence.model.dto.SignUpEmisorDto;
+import softech.apifacturacion.persistence.model.dto.UserRequestDto;
 import softech.apifacturacion.persistence.repository.*;
 import softech.apifacturacion.persistence.service.*;
 import softech.apifacturacion.response.*;
 import softech.apifacturacion.upload.*;
 
+@Service
+@RequiredArgsConstructor
 public class EmisorServiceImpl implements EmisorService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmisorServiceImpl.class);
 
     @Autowired
     EmisorRepossitory repository;
@@ -33,143 +41,90 @@ public class EmisorServiceImpl implements EmisorService {
 
     @Override
     public Respuesta registerEmisor(Emisor emisor, String nombres, String apellidos, String password) {
-
+    
         Optional<Emisor> optional = repository.findByRuc(emisor.getRuc());
-
+    
         if (optional.isPresent()) {
             return Respuesta.builder()
                     .type(RespuestaType.WARNING)
                     .message("El ruc ya se encuentra registrado en nuestro sistema")
                     .build();
         }
-
+    
         if (emisor.getRuc().isEmpty()) {
             return Respuesta.builder()
                     .type(RespuestaType.WARNING)
-                    .message("Debe agregar el ruc correspodiente")
+                    .message("Debe agregar el ruc correspondiente")
                     .build();
         }
-
+    
         if (emisor.getCorreoRemitente().isEmpty()) {
             return Respuesta.builder()
                     .type(RespuestaType.WARNING)
                     .message("Debe agregar el email para recibir los comprobantes generados")
                     .build();
         }
-
-        /*
-         * Configuracion ambiente para la emision de los comprobantes
-         * 
-         * @param ambiente 1 es para PRUEBAS
-         * 
-         * @param ambiente 2 es para PRODUCCION
-         */
-        emisor.setAmbiente("1");
-
-        /*
-         * Configuracion de emision de los comprobantes
-         */
-        emisor.setTipoEmision(TipoEmision.NORMAL.getCodigo());
-
-        /*
-         * Configuracion de status del emiosor
-         */
-        emisor.setStatus(Status.ONLINE);
-
-        /*
-         * Configuracion del plan contratado
-         */
-        if (emisor.getFkPlan() == null || emisor.getFkPlan().getIdPlan() <= 0) {
-            // Elige el plan gratuito que tiene por defecto que esta en el id 1
-            Optional<Plan> optionalPlan = planRepository.findById(1);
-
-            emisor.setFkPlan(Plan.builder().idPlan(optionalPlan.get().getIdPlan()).build());
-            /*
-             * Configuracion de la cantidad contratada
-             */
-            emisor.setCantidadContratada(optionalPlan.get().getCantidad());
-            /*
-             * Configuracion de la cantidad usada
-             */
-            emisor.setCantidadUsada(0);
-            /*
-             * Configuracion de la fecha de inicio
-             */
-            emisor.setFechaInicio(new Fecha().fechaCreacion());
-            /*
-             * Configuracion de la fecha que finaliza los comprobantes
-             */
-            emisor.setFechaFin(new Fecha().addMeses(optional.get().getFechaInicio(),
-                    Integer.parseInt(optionalPlan.get().getPeriodo())));
-        } else {
-            // si es elegido un plan se agrega los campos correspondientes
+    
+        try {
+            // Verificar si el plan existe en la base de datos
             Optional<Plan> optionalPlan = planRepository.findById(emisor.getFkPlan().getIdPlan());
-
-            emisor.setFkPlan(optionalPlan.get());
-
-            emisor.setFechaInicio(new Fecha().fechaCreacion());
-            /*
-             * Configuracion de la fecha que finaliza los comprobantes
-             */
-            emisor.setFechaFin(new Fecha().addMeses(optional.get().getFechaInicio(),
-                    Integer.parseInt(optionalPlan.get().getPeriodo())));
-            /*
-             * Configuracion de la cantidad contratada
-             */
-            emisor.setCantidadContratada(optionalPlan.get().getCantidad());
-            /*
-             * Configuracion de la cantidad usada
-             */
+            if (!optionalPlan.isPresent()) {
+                return Respuesta.builder()
+                        .type(RespuestaType.WARNING)
+                        .message("El plan especificado no existe")
+                        .build();
+            }
+    
+            Plan plan = optionalPlan.get();
+    
+            // Configurar emisor
+            emisor.setAmbiente(AmbienteSri.TEST.getUrl());
+            emisor.setTipoEmision(TipoEmision.NORMAL.getCodigo());
+            emisor.setStatus(Status.ONLINE);
+            emisor.setFkPlan(plan);
+            emisor.setCantidadContratada(plan.getCantidad());
             emisor.setCantidadUsada(0);
-            /*
-             * Configuracion de la fecha de inicio
-             */
             emisor.setFechaInicio(new Fecha().fechaCreacion());
-            /*
-             * Configuracion de la fecha que finaliza los comprobantes
-             */
-            emisor.setFechaFin(new Fecha().addMeses(optional.get().getFechaInicio(),
-                    Integer.parseInt(optionalPlan.get().getPeriodo())));
+            emisor.setFechaFin(new Fecha().addMeses(emisor.getFechaInicio(), Integer.parseInt(plan.getPeriodo())));
+            emisor.setCreated(new Fecha().fechaCreacion());
+
+            repository.save(emisor);
+    
+            // Construir DTO de usuario y registrar
+            UserRequestDto user = UserRequestDto.builder()
+                    .fkEmisor(emisor)
+                    .username(emisor.getRuc())
+                    .password(password.toCharArray())
+                    .email(emisor.getCorreoRemitente())
+                    .nombres(nombres)
+                    .apellidos(apellidos)
+                    .role(Role.EMISOR)
+                    .build();
+    
+            // Registrar usuario
+            Respuesta response = userService.register(user);
+    
+            // Manejar errores al registrar usuario
+            if (response.getType() == RespuestaType.WARNING) {
+                // Eliminar emisor de la base de datos si hay un error al registrar el usuario
+                repository.deleteById(emisor.getIdEmisor());
+                return response;
+            }
+    
+            return Respuesta.builder()
+                    .type(RespuestaType.SUCCESS)
+                    .message("Registro guardado correctamente")
+                    .build();
+        } catch (Exception e) {
+            // Manejar cualquier otro error interno
+            logger.error("Error interno del servidor: " + e.getMessage());
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Error interno del servidor: " + e.getMessage())
+                    .build();
         }
-
-        /*
-         * Configuracion de la fecha que se registro
-         */
-        emisor.setCreated(new Fecha().fechaCreacion());
-
-        /*
-         * Se debe enviar el mail al usuario creado
-         */
-        repository.save(emisor);
-
-        SignUpEmisorDto user = SignUpEmisorDto.builder()
-                .username(emisor.getRuc())
-                .password(password.toCharArray())
-                .email(emisor.getCorreoRemitente())
-                .nombres(nombres)
-                .apellidos(apellidos)
-                .build();
-
-        /*
-         * Nos comunicamos con el servicio que genera el usuario
-         */
-        Respuesta response = userService.register(user);
-
-        /*
-         * si no se guarda o genera un error los datos se eliminan
-         */
-        if (response.getType() == RespuestaType.WARNING) {
-            // se elimina el registro de la base de datos para que se pueda reiniciar el registro con otra solicitud
-            repository.deleteById(repository.findByRuc(emisor.getRuc()).get().getIdEmisor());
-            return response;
-        }
-
-        return Respuesta.builder()
-                .type(RespuestaType.SUCCESS)
-                .message("Registro guardado correctamente")
-                .build();
     }
-
+    
     @Override
     public Respuesta updateEmisor(Emisor emisor, MultipartFile logo, MultipartFile firma) {
         Optional<Emisor> optional = repository.findByRuc(emisor.getRuc());

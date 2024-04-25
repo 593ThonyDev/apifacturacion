@@ -8,7 +8,7 @@ import softech.apifacturacion.persistence.model.Emisor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SignUpEmisorDto {
+public class UserRequestDto {
 
     private Emisor fkEmisor;
     private String username;
