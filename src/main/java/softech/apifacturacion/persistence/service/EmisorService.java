@@ -2,6 +2,7 @@ package softech.apifacturacion.persistence.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Emisor;
 import softech.apifacturacion.response.Respuesta;
 
@@ -41,5 +42,17 @@ public interface EmisorService {
      * @return Respuesta valida o adventerncias con los errores o campos faltantes.
      */
     public Respuesta configurateEmisor(Emisor emisor, MultipartFile logo, MultipartFile firma);
+
+    /*
+     * Cambio de estatus para la gestion automatica del emisor para poder mantener
+     * la logica del negocio
+     * 
+     * @param ruc identificador del emisor
+     * 
+     * @param status estado al que se desea cmabiar "ONLINE" y "OFFLINE"
+     * 
+     * @return Respuesta valida o adventerncias con los errores
+     */
+    public Respuesta changeStatus(String ruc, Status status);
 
 }

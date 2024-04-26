@@ -277,4 +277,23 @@ public class EmisorServiceImpl implements EmisorService {
                 .build();
     }
 
+    @Override
+    public Respuesta changeStatus(String ruc, Status status) {
+        Optional<Emisor> optional = repository.findByRuc(ruc);
+
+        if (!optional.isPresent()) {
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("No existe el registro indicado")
+                    .build();
+        }
+
+        optional.get().setStatus(status);
+
+        return Respuesta.builder()
+                .type(RespuestaType.SUCCESS)
+                .message("Estado del emisor actualizado correctamente")
+                .build();
+    }
+
 }

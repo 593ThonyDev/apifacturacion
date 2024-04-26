@@ -1,19 +1,15 @@
 package softech.apifacturacion.persistence.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Emisor;
 import softech.apifacturacion.persistence.service.EmisorService;
-import softech.apifacturacion.response.Respuesta;
-import softech.apifacturacion.response.RespuestaType;
+import softech.apifacturacion.response.*;
 
 @RestController
 @RequestMapping("/facturacion/v1/emisor")
@@ -67,6 +63,29 @@ public class EmisorController {
             logger.error("Error interno en el servidor en la cofiguracion del emisor: " + e.getMessage());
             return ResponseEntity.badRequest().body(Respuesta.builder()
                     .message("Error interno en el servidor en la cofiguracion del emisor")
+                    .build());
+        }
+    }
+
+    @PatchMapping("/changeStatus")
+    public ResponseEntity<Respuesta> changeStatus(@RequestParam("ruc") String ruc,
+            @RequestParam("status") String status) {
+        try {
+            Respuesta response = service.changeStatus(ruc, Status.valueOf(status));
+            if (response.getType() == RespuestaType.SUCCESS) {
+                return ResponseEntity.ok().body(Respuesta.builder()
+                        .message(response.getMessage())
+                        .build());
+            } else {
+                logger.error(response.getMessage());
+                return ResponseEntity.badRequest().body(Respuesta.builder()
+                        .message(response.getMessage())
+                        .build());
+            }
+        } catch (Exception e) {
+            logger.error("Error interno en el servidor en actualizar el status emisor: " + e.getCause());
+            return ResponseEntity.internalServerError().body(Respuesta.builder()
+                    .message("Error interno en el servidor en actualizar el status emisor: " + e.getMessage())
                     .build());
         }
     }
