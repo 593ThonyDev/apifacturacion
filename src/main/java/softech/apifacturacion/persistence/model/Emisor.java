@@ -74,7 +74,7 @@ public class Emisor {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "dirlogo")
-    String dirLogo;
+    String logo;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "dirfirma")

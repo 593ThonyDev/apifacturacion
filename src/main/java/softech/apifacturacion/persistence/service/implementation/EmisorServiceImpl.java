@@ -1,13 +1,15 @@
 package softech.apifacturacion.persistence.service.implementation;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +18,8 @@ import softech.apifacturacion.email.EmailSender;
 import softech.apifacturacion.persistence.enums.*;
 import softech.apifacturacion.persistence.function.Fecha;
 import softech.apifacturacion.persistence.model.*;
+import softech.apifacturacion.persistence.model.dto.EmisorDto;
+import softech.apifacturacion.persistence.model.dto.EmisorPageDto;
 import softech.apifacturacion.persistence.model.dto.UserRequestDto;
 import softech.apifacturacion.persistence.repository.*;
 import softech.apifacturacion.persistence.service.*;
@@ -51,6 +55,9 @@ public class EmisorServiceImpl implements EmisorService {
 
     @Autowired
     private EmailSender emailSender;
+
+    @Autowired
+    private final ModelMapper mapper;
 
     @Override
     public Respuesta registerEmisor(Emisor emisor, String nombres, String apellidos, String password) {
@@ -93,7 +100,7 @@ public class EmisorServiceImpl implements EmisorService {
             // Configurar emisor
             emisor.setAmbiente(AmbienteSri.TEST.getUrl());
             emisor.setTipoEmision(TipoEmision.NORMAL.getCodigo());
-            emisor.setStatus(Status.ONLINE);
+            emisor.setStatus(Status.CONFIGURATE);
             emisor.setFkPlan(plan);
             emisor.setCantidadContratada(plan.getCantidad());
             emisor.setCantidadUsada(0);
@@ -235,7 +242,8 @@ public class EmisorServiceImpl implements EmisorService {
                     .build();
         } else {
             optional.get()
-                    .setDirLogo(imageUpload.addImage(optional.get().getRuc() + "/configuration", "logoEmisor", logo));
+                    .setLogo(imageUpload.addImage(optional.get().getRuc() + "/configuration", optional.get().getRuc(),
+                            logo));
         }
 
         // CONFIGURACION DE LA FIRMA ELECTRONICA DE LA EMPRESA
@@ -249,6 +257,9 @@ public class EmisorServiceImpl implements EmisorService {
                     .setDirFirma(firmaUpload.addSignature(optional.get().getRuc() + "/configuration",
                             optional.get().getRuc(), firma));
         }
+
+        // CONFIGURACION DEL STATUS A ONLINE
+        optional.get().setStatus(Status.OFFLINE);
 
         /*
          * Se debe enviar el mail al usuario los datos de la empresa que ha sido
@@ -293,6 +304,33 @@ public class EmisorServiceImpl implements EmisorService {
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)
                 .message("Estado del emisor actualizado correctamente")
+                .build();
+    }
+
+    @Override
+    public Page<EmisorPageDto> getAll(Pageable pageable) {
+        Page<Emisor> page = repository.findAll(pageable);
+        if (!page.isEmpty()) {
+            return page.map(emisor -> mapper.map(emisor, EmisorPageDto.class));
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Respuesta getDataByRuc(String ruc) {
+
+        Optional<Emisor> optional = repository.findByRuc(ruc);
+        
+        if (!optional.isPresent()) {
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("No existe el registro indicado")
+                    .build();
+        }
+        return Respuesta.builder()
+                .type(RespuestaType.SUCCESS)
+                .content(new Object[] { mapper.map(optional.get(), EmisorDto.class) })
                 .build();
     }
 

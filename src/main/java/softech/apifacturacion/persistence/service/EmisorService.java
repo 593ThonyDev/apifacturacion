@@ -1,9 +1,11 @@
 package softech.apifacturacion.persistence.service;
 
+import org.springframework.data.domain.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Emisor;
+import softech.apifacturacion.persistence.model.dto.EmisorPageDto;
 import softech.apifacturacion.response.Respuesta;
 
 public interface EmisorService {
@@ -54,5 +56,22 @@ public interface EmisorService {
      * @return Respuesta valida o adventerncias con los errores
      */
     public Respuesta changeStatus(String ruc, Status status);
+
+    /*
+     * Listar las paginas correspondentes a los emisores registrados
+     */
+    public Page<EmisorPageDto> getAll(Pageable pageable);
+
+    /*
+     * Cambio de estatus para la gestion automatica del emisor para poder mantener
+     * la logica del negocio
+     * 
+     * @param ruc identificador del emisor
+     * 
+     * 
+     * @return Respuesta valida con la informacion del Emisor, o adventerncias con
+     * los errores
+     */
+    public Respuesta getDataByRuc(String ruc);
 
 }
