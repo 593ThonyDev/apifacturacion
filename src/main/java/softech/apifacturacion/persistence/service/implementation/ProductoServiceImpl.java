@@ -1,26 +1,27 @@
 package softech.apifacturacion.persistence.service.implementation;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.*;
-import softech.apifacturacion.persistence.enums.ProductSubcidio;
-import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.model.Emisor;
-import softech.apifacturacion.persistence.model.Producto;
-import softech.apifacturacion.persistence.repository.EmisorRepossitory;
-import softech.apifacturacion.persistence.repository.ProductoRepository;
+import softech.apifacturacion.persistence.enums.*;
+import softech.apifacturacion.persistence.model.*;
+import softech.apifacturacion.persistence.model.dto.ProductoByRucPageDto;
+import softech.apifacturacion.persistence.model.dto.ProductoPageDto;
+import softech.apifacturacion.persistence.repository.*;
 import softech.apifacturacion.persistence.service.ProductoService;
-import softech.apifacturacion.response.Respuesta;
-import softech.apifacturacion.response.RespuestaType;
+import softech.apifacturacion.response.*;
 import softech.apifacturacion.upload.UploadImage;
 
 @Service
@@ -31,18 +32,36 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository repository;
 
     @Autowired
+    private final ModelMapper modelMapper;
+
+    @Autowired
     private final EmisorRepossitory emisorRepository;
 
     @Autowired
     private UploadImage uploadImage;
 
     @Override
-    public Page<Producto> getAll(Pageable pageable) {
+    public Page<ProductoPageDto> getAll(Pageable pageable) {
         Page<Producto> pagina = repository.findAll(pageable);
-        if (pagina.isEmpty()) {
+        if (!pagina.isEmpty()) {
+            return pagina.map(product -> modelMapper.map(product, ProductoPageDto.class));
+        } else {
+            return Page.empty();
+        }
+    }
+
+    @Override
+    public Page<ProductoByRucPageDto> getAllByRuc(String ruc, Pageable pageable) {
+        Optional<Emisor> optional = emisorRepository.findByRuc(ruc);
+        if (!optional.isPresent()) {
             return null;
         }
-        return pagina;
+        Page<Producto> pagina = repository.findByFkEmisor(optional.get(), pageable);
+        if (!pagina.isEmpty()) {
+            return pagina.map(product -> modelMapper.map(product, ProductoByRucPageDto.class));
+        } else {
+            return Page.empty();
+        }
     }
 
     @Override
@@ -85,19 +104,28 @@ public class ProductoServiceImpl implements ProductoService {
                     .message("Debe agregar el codigo auxiliar del producto")
                     .build();
         }
-        if (producto.getSubcidio() == ProductSubcidio.ONLINE || producto.getSubcidio() != null) {
-            producto.setSubcidio(ProductSubcidio.ONLINE);
+        if (producto.getSubcidio() == null) {
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("Debe seleccionar un tipo de subcidio")
+                    .build();
+        }
 
-            if (producto.getSubsidioValor() <= 0) {
+        if (producto.getSubcidio() == ProductSubcidio.ONLINE) {
+            if (producto.getSubcidioValor() <= 0) {
                 return Respuesta.builder()
                         .type(RespuestaType.WARNING)
-                        .message("Debe agregar un valor del subcidio debe ser mayor a cero")
+                        .message("El valor del subcidio debe ser mayor a cero")
                         .build();
             }
-
         } else {
             producto.setSubcidio(ProductSubcidio.OFFLINE);
-            producto.setSubsidioValor(null);
+            producto.setSubcidioValor(0.0);
+        }
+        if (producto.getTipo() == ProductTipo.BIEN) {
+            producto.setTipo(ProductTipo.BIEN);
+        } else {
+            producto.setTipo(ProductTipo.SERVICIO);
         }
         producto.setStatus(Status.ONLINE);
         if (img1.isEmpty()) {
@@ -130,6 +158,11 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setImg3(uploadImage.addImage(optional.get().getRuc() + "/productos",
                 producto.getCodPrincipal().replace(" ", "") + "-" + producto.getNombre().replace(" ", "") + "img3",
                 img3));
+
+        /*
+         * Configuracion del emisor
+         */
+        producto.setFkEmisor(optional.get());
 
         repository.save(producto);
         return Respuesta.builder()
@@ -182,7 +215,7 @@ public class ProductoServiceImpl implements ProductoService {
         if (producto.getSubcidio() == ProductSubcidio.ONLINE || producto.getSubcidio() != null) {
             producto.setSubcidio(ProductSubcidio.ONLINE);
 
-            if (producto.getSubsidioValor() <= 0) {
+            if (producto.getSubcidioValor() <= 0) {
                 return Respuesta.builder()
                         .type(RespuestaType.WARNING)
                         .message("Debe agregar un valor del subcidio debe ser mayor a cero")
@@ -191,7 +224,7 @@ public class ProductoServiceImpl implements ProductoService {
 
         } else {
             producto.setSubcidio(ProductSubcidio.OFFLINE);
-            producto.setSubsidioValor(null);
+            producto.setSubcidioValor(null);
         }
 
         repository.save(producto);
@@ -283,7 +316,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public Respuesta getbyid(Integer idProduct) {
+    public Respuesta getbyId(Integer idProduct) {
         Optional<Producto> optionalProduct = repository.findById(idProduct);
         if (!optionalProduct.isPresent()) {
             return Respuesta.builder()
@@ -295,5 +328,18 @@ public class ProductoServiceImpl implements ProductoService {
                 .content(new Object[] { optionalProduct.get() })
                 .type(RespuestaType.SUCCESS)
                 .build();
+    }
+
+    @Override
+    public List<ProductoByRucPageDto> search(String searchTerm) {
+        String searchValue = "%" + searchTerm + "%";
+        List<Producto> pagina = repository.findByPartialNombreOrPartialCodPrincipal(searchValue, searchValue);
+        if (!pagina.isEmpty()) {
+            return pagina.stream()
+                    .map(product -> modelMapper.map(product, ProductoByRucPageDto.class))
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
     }
 }
