@@ -1,4 +1,7 @@
 package softech.apifacturacion.persistence.controller;
+
+import java.util.List;
+
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -10,11 +13,13 @@ import softech.apifacturacion.persistence.enums.ProductSubcidio;
 import softech.apifacturacion.persistence.enums.ProductTipo;
 import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.model.Producto;
+import softech.apifacturacion.persistence.model.dto.ProductoByRucPageDto;
+import softech.apifacturacion.persistence.model.dto.ProductoPageDto;
 import softech.apifacturacion.persistence.service.ProductoService;
 import softech.apifacturacion.response.*;
 
 @RestController
-@RequestMapping("/facturacion/v/producto")
+@RequestMapping("/facturacion/v1/producto")
 public class ProductoController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
@@ -22,7 +27,7 @@ public class ProductoController {
     @Autowired
     private ProductoService service;
 
-    @PatchMapping("/save")
+    @PostMapping("/save")
     public ResponseEntity<Respuesta> save(
             @RequestParam("ruc") String ruc,
             @RequestParam("nombre") String nombre,
@@ -33,20 +38,20 @@ public class ProductoController {
             @RequestParam("subcidio") String subcidio,
             @RequestParam("subcidiovalor") String subcidiovalor,
             @RequestParam("tipo") String tipo,
-            @RequestParam("status") String status,
             @RequestParam("img1") MultipartFile img1,
             @RequestParam("img2") MultipartFile img2,
             @RequestParam("img3") MultipartFile img3) {
 
         try {
+
             Producto producto = Producto.builder()
                     .nombre(nombre)
                     .stock(Integer.parseInt(stock))
-                    .precioUnitario(Double.parseDouble(preciounitario))
                     .codPrincipal(codprincipal)
                     .codAuxiliar(codauxiliar)
-                    .subcidio(ProductSubcidio.valueOf(subcidio))
-                    .subsidioValor(Double.parseDouble(subcidiovalor))
+                    .precioUnitario(Double.parseDouble(preciounitario))
+                    .subcidio(ProductSubcidio.valueOf(subcidio.isEmpty() ? "OFFLINE" : subcidio))
+                    .subcidioValor(Double.parseDouble(subcidiovalor.isEmpty() ? "0.0" : subcidiovalor))
                     .tipo(ProductTipo.valueOf(tipo))
                     .build();
 
@@ -65,7 +70,7 @@ public class ProductoController {
         } catch (Exception e) {
             logger.error("Error interno en el servidor en la cofiguracion del producto: " + e.getMessage());
             return ResponseEntity.badRequest().body(Respuesta.builder()
-                    .message("Error interno en el servidor en la cofiguracion del producto")
+                    .message("Error interno en el servidor al guardar el producto " + e)
                     .build());
         }
     }
@@ -94,9 +99,9 @@ public class ProductoController {
     }
 
     @GetMapping("/getData")
-    public ResponseEntity<Page<Producto>> getAll(Pageable pageable) {
+    public ResponseEntity<Page<ProductoPageDto>> getAll(Pageable pageable) {
         try {
-            Page<Producto> pagina = service.getAll(pageable);
+            Page<ProductoPageDto> pagina = service.getAll(pageable);
             if (pagina != null && pagina.isEmpty()) {
                 return ResponseEntity.noContent().build();
             } else if (pagina != null) {
@@ -111,10 +116,28 @@ public class ProductoController {
 
     }
 
-    @GetMapping("/getData/{idProducto}")
+    @GetMapping("/getDataByRuc/{ruc}")
+    public ResponseEntity<Page<ProductoByRucPageDto>> getAllByRuc(@PathVariable("ruc") String ruc, Pageable pageable) {
+        try {
+            Page<ProductoByRucPageDto> pagina = service.getAllByRuc(ruc, pageable);
+            if (pagina != null && pagina.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            } else if (pagina != null) {
+                return ResponseEntity.ok(pagina);
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage().toString());
+            return ResponseEntity.internalServerError().build();
+        }
+
+    }
+
+    @GetMapping("/getInfo/{idProducto}")
     public ResponseEntity<Respuesta> getDataByRuc(@PathVariable("idProducto") String idProducto) {
         try {
-            Respuesta response = service.getbyid(Integer.parseInt(idProducto));
+            Respuesta response = service.getbyId(Integer.parseInt(idProducto));
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok().body(Respuesta.builder()
                         .content(response.getContent())
@@ -132,7 +155,6 @@ public class ProductoController {
                     .build());
         }
     }
-
 
     @PatchMapping("/updateImage")
     public ResponseEntity<Respuesta> updateImage(
@@ -155,5 +177,16 @@ public class ProductoController {
         }
     }
 
-    
+    @GetMapping("/search/{searchTerm}")
+    public ResponseEntity<List<ProductoByRucPageDto>> searchProduct(@PathVariable("searchTerm") String searchTerm) {
+        List<ProductoByRucPageDto> lista = service.search(searchTerm);
+        if (lista != null && lista.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        } else if (lista != null) {
+            return ResponseEntity.ok(lista);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
+    }
+
 }

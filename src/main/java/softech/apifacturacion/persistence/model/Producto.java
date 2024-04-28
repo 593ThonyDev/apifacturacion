@@ -69,10 +69,10 @@ public class Producto {
     ProductSubcidio subcidio;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "subsidiovalor")
-    Double subsidioValor;
+    @Column(name = "subcidiovalor")
+    Double subcidioValor;
 
-    @Column(name = "subsidio")
+    @Column(name = "tipo")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Enumerated(EnumType.STRING)
     ProductTipo tipo;
