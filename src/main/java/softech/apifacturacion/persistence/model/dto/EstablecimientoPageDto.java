@@ -10,7 +10,7 @@ import softech.apifacturacion.persistence.enums.Status;
 public class EstablecimientoPageDto {
 
     private Integer idEstablecimiento;
-    private EmisorDto fkEmisor;
+    private EmisorPageDto fkEmisor;
     private String nombre;
     private String codigo;
     private String web;

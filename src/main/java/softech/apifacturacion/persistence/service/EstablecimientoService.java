@@ -6,9 +6,8 @@ import org.springframework.data.domain.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.model.Establecimiento;
-import softech.apifacturacion.persistence.model.dto.EstablecimientoDto;
-import softech.apifacturacion.persistence.model.dto.EstablecimientoPageDto;
+import softech.apifacturacion.persistence.model.dto.*;
+import softech.apifacturacion.persistence.model.*;
 import softech.apifacturacion.response.Respuesta;
 
 public interface EstablecimientoService {
@@ -17,7 +16,7 @@ public interface EstablecimientoService {
 
     Respuesta update(Establecimiento establecimiento);
 
-    Respuesta updateLogo(Integer idEstablecimiento, MultipartFile logo);
+    Respuesta updateLogo(String ruc, Integer idEstablecimiento, MultipartFile logo);
 
     Respuesta changeStatus(Integer idEstablecimiento, Status status);
 

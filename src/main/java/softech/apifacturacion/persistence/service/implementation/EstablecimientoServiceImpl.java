@@ -88,6 +88,8 @@ public class EstablecimientoServiceImpl implements EstablecimientoService {
                     .build();
         }
 
+        establecimiento.setFkEmisor(optional.get());
+        establecimiento.setStatus(Status.ONLINE);
         /*
          * Agrego el logo en el objeto apra guardar en la base de datos
          */
@@ -103,6 +105,7 @@ public class EstablecimientoServiceImpl implements EstablecimientoService {
 
     @Override
     public Respuesta update(Establecimiento establecimiento) {
+
         Optional<Establecimiento> optional = repository.findById(establecimiento.getIdEstablecimiento());
 
         if (!optional.isPresent()) {
@@ -147,6 +150,9 @@ public class EstablecimientoServiceImpl implements EstablecimientoService {
                     .type(RespuestaType.WARNING)
                     .build();
         }
+        establecimiento.setFkEmisor(optional.get().getFkEmisor());
+        establecimiento.setStatus(Status.ONLINE);
+        establecimiento.setLogo(optional.get().getLogo());
         repository.save(establecimiento);
         return Respuesta.builder()
                 .message("Cambios guardados correctamente")
@@ -222,12 +228,22 @@ public class EstablecimientoServiceImpl implements EstablecimientoService {
 
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)
-                .content(new Object[] { optional.get() })
+                .content(new Object[] { modelMapper.map(optional.get(), EstablecimientoPageDto.class) })
                 .build();
     }
 
     @Override
-    public Respuesta updateLogo(Integer idEstablecimiento, MultipartFile logo) {
+    public Respuesta updateLogo(String ruc, Integer idEstablecimiento, MultipartFile logo) {
+
+        Optional<Emisor> optionalEmisor = emisorRepository.findByRuc(ruc);
+
+        if (!optionalEmisor.isPresent()) {
+            return Respuesta.builder()
+                    .message("No existe el registro del emisor")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
         Optional<Establecimiento> optional = repository.findById(idEstablecimiento);
 
         if (!optional.isPresent()) {
@@ -243,11 +259,14 @@ public class EstablecimientoServiceImpl implements EstablecimientoService {
                     .build();
         }
 
-        optional.get().setLogo(upload.addImage(null, null, logo));
+        optional.get().setLogo(
+                upload.addImage(
+                        optional.get().getFkEmisor().getRuc() + "/establecimientos/" + optional.get().getCodigo(),
+                        "logo", logo));
         repository.save(optional.get());
 
         return Respuesta.builder()
-                .message("No existe ese registro")
+                .message("Logotipo actualizado con exito")
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
