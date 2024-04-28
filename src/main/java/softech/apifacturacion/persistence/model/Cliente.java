@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,6 +34,10 @@ public class Cliente {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "tipoidentificacion")
     String tipoIdentificacion;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Column(name = "identificacion")
+    String Identificacion;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "direccion")
