@@ -7,8 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import softech.apifacturacion.persistence.service.EstablecimientoService;
-import softech.apifacturacion.response.Respuesta;
-import softech.apifacturacion.response.RespuestaType;
+import softech.apifacturacion.response.*;
 
 @RestController
 @RequestMapping("/facturacion/v1/establecimiento")
@@ -23,6 +22,7 @@ public class EstablecimientoController {
     public ResponseEntity<Respuesta> getById(@PathVariable("idEstablecimiento") String idEstablecimiento) {
         try {
             Respuesta response = service.getById(Integer.parseInt(idEstablecimiento));
+            
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok().body(Respuesta.builder()
                         .content(response.getContent())

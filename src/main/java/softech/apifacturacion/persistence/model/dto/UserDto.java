@@ -10,10 +10,10 @@ import lombok.*;
 public class UserDto {
 
     private Integer idUser;
+    private String username;
     private String nombres;
     private String apellidos;
-    private String login;
-    private String token;
     private Role role;
+    private String token;
 
 }

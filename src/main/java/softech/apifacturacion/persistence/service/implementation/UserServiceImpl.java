@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import softech.apifacturacion.email.EmailSender;
 import softech.apifacturacion.exception.AppException;
 import softech.apifacturacion.persistence.enums.UserStatus;
+import softech.apifacturacion.persistence.mapper.UserMapper;
 import softech.apifacturacion.persistence.model.User;
 import softech.apifacturacion.persistence.model.dto.*;
 import softech.apifacturacion.persistence.repository.UserRepository;
@@ -35,15 +36,23 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private EmailSender emailSender;
 
+    private final UserMapper userMapper;
+
     @Override
     public UserDto login(CredentialsDto credentialsDto) {
-        return null;
+        User user = userRepository.findByUsername(credentialsDto.getUsername())
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+
+        if (passwordEncoder.matches(CharBuffer.wrap(credentialsDto.getPassword()), user.getPassword())) {
+            return userMapper.toUserDto(user);
+        }
+        throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
     }
 
     @Override
     public Respuesta register(UserRequestDto userDto) {
 
-        Optional<User> optionalUser = userRepository.findByUsername(userDto.getLogin());
+        Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
 
         if (optionalUser.isPresent()) {
             throw new AppException("Este usuario no esta disponible", HttpStatus.BAD_REQUEST);
@@ -73,7 +82,7 @@ public class UserServiceImpl implements UserService {
                             "Si usted no ha creado la cuenta contactase manera urgente, respondiendo este email, asi solucionaremos este evento, para asi no tener inconvenientes de que afecten a su seguridad en el internet.",
                     user.getNombres() + " " + user.getApellidos());
         });
-        
+
         executorService.shutdown();
 
         return Respuesta.builder()
@@ -84,10 +93,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto findByLogin(String login) {
-        // User user = userRepository.findByLogin(login)
-        // .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-        // return userMapper.toUserDto(user);
-        return null;
+        User user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
+        return userMapper.toUserDto(user);
     }
 
 }

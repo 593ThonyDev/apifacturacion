@@ -9,12 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import softech.apifacturacion.persistence.enums.ProductSubcidio;
-import softech.apifacturacion.persistence.enums.ProductTipo;
-import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.model.Producto;
-import softech.apifacturacion.persistence.model.dto.ProductoByRucPageDto;
-import softech.apifacturacion.persistence.model.dto.ProductoPageDto;
+import softech.apifacturacion.persistence.enums.*;
+import softech.apifacturacion.persistence.model.*;
+import softech.apifacturacion.persistence.model.dto.*;
 import softech.apifacturacion.persistence.service.ProductoService;
 import softech.apifacturacion.response.*;
 
@@ -177,9 +174,27 @@ public class ProductoController {
         }
     }
 
+    @GetMapping("/search/{ruc}/{searchTerm}")
+    public ResponseEntity<List<ProductoByRucPageDto>> searchProductByRuc(
+            @PathVariable("ruc") String ruc,
+            @PathVariable("searchTerm") String searchTerm) {
+
+        List<ProductoByRucPageDto> lista = service.searchByRuc(ruc, searchTerm);
+
+        if (lista != null && lista.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        } else if (lista != null) {
+            return ResponseEntity.ok(lista);
+        } else {
+            return ResponseEntity.noContent().build();
+        }
+    }
+
     @GetMapping("/search/{searchTerm}")
-    public ResponseEntity<List<ProductoByRucPageDto>> searchProduct(@PathVariable("searchTerm") String searchTerm) {
-        List<ProductoByRucPageDto> lista = service.search(searchTerm);
+    public ResponseEntity<List<ProductoPageDto>> searchProduct(@PathVariable("searchTerm") String searchTerm) {
+       
+        List<ProductoPageDto> lista = service.search(searchTerm);
+       
         if (lista != null && lista.isEmpty()) {
             return ResponseEntity.noContent().build();
         } else if (lista != null) {

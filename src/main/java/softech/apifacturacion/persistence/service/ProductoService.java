@@ -5,10 +5,9 @@ import java.util.List;
 import org.springframework.data.domain.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import softech.apifacturacion.persistence.enums.Status;
-import softech.apifacturacion.persistence.model.Producto;
-import softech.apifacturacion.persistence.model.dto.ProductoByRucPageDto;
-import softech.apifacturacion.persistence.model.dto.ProductoPageDto;
+import softech.apifacturacion.persistence.model.dto.*;
+import softech.apifacturacion.persistence.enums.*;
+import softech.apifacturacion.persistence.model.*;
 import softech.apifacturacion.response.Respuesta;
 
 public interface ProductoService {
@@ -27,6 +26,8 @@ public interface ProductoService {
 
     Respuesta getbyId(Integer idProduct);
 
-    List<ProductoByRucPageDto> search(String searchTerm);
+    List<ProductoPageDto> search(String searchTerm);
+
+    List<ProductoByRucPageDto> searchByRuc(String ruc, String searchTerm);
 
 }

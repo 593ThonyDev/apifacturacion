@@ -4,6 +4,7 @@ import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ public class EmisorController {
     private EmisorService service;
 
     @PatchMapping("/configuration")
+    @PreAuthorize("hasAnyAuthority('EMISOR')")
     public ResponseEntity<Respuesta> configurateEmisor(
             @RequestParam("ruc") String ruc,
             @RequestParam("razonSocial") String razonSocial,
@@ -70,6 +72,7 @@ public class EmisorController {
     }
 
     @PatchMapping("/changeStatus")
+    @PreAuthorize("hasAnyAuthority('EMISOR','ADMINISTRADOR')")
     public ResponseEntity<Respuesta> changeStatus(@RequestParam("ruc") String ruc,
             @RequestParam("status") String status) {
         try {

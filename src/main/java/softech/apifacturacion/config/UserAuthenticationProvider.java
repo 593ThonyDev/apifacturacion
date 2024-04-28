@@ -39,7 +39,7 @@ public class UserAuthenticationProvider {
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
-                .withSubject(user.getLogin())
+                .withSubject(user.getUsername())
                 .withIssuedAt(now)
                 .withExpiresAt(validity)
                 .withClaim("role", user.getRole().name())

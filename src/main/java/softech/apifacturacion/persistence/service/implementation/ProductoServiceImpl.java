@@ -317,22 +317,41 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Respuesta getbyId(Integer idProduct) {
-        Optional<Producto> optionalProduct = repository.findById(idProduct);
-        if (!optionalProduct.isPresent()) {
+        Optional<Producto> optional = repository.findById(idProduct);
+        if (!optional.isPresent()) {
             return Respuesta.builder()
                     .message("No existe el producto")
                     .type(RespuestaType.WARNING)
                     .build();
         }
         return Respuesta.builder()
-                .content(new Object[] { optionalProduct.get() })
+                .content(new Object[] { modelMapper.map(optional.get(), ProductoPageDto.class) })
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
 
     @Override
-    public List<ProductoByRucPageDto> search(String searchTerm) {
+    public List<ProductoPageDto> search(String searchTerm) {
         String searchValue = "%" + searchTerm + "%";
+        List<Producto> pagina = repository.findByPartialNombreOrPartialCodPrincipal(searchValue, searchValue);
+        if (!pagina.isEmpty()) {
+            return pagina.stream()
+                    .map(product -> modelMapper.map(product, ProductoPageDto.class))
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public List<ProductoByRucPageDto> searchByRuc(String ruc, String searchTerm) {
+        Optional<Emisor> optional = emisorRepository.findByRuc(ruc);
+        if (!optional.isPresent()) {
+            return null;
+        }
+
+        String searchValue = "%" + searchTerm + "%";
+        
         List<Producto> pagina = repository.findByPartialNombreOrPartialCodPrincipal(searchValue, searchValue);
         if (!pagina.isEmpty()) {
             return pagina.stream()
