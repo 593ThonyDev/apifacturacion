@@ -26,6 +26,11 @@ public class PtoEmision {
     Emisor fkEmisor;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @ManyToOne
+    @JoinColumn(name = "fkcajero")
+    Cajero fkCajero;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "nombre")
     String nombre;
 

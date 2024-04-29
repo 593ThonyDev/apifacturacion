@@ -8,7 +8,7 @@ import softech.apifacturacion.response.Respuesta;
 public interface UserService {
     public UserDto login(CredentialsDto credentialsDto);
 
-    Respuesta register(UserRequestDto SignUpEmisorDto);
+    Respuesta register(UserRequestDto UserRequestDto);
 
     public UserDto findByUsername(String login);
 }

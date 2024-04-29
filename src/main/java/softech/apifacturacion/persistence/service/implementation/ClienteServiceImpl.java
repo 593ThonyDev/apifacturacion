@@ -226,7 +226,7 @@ public class ClienteServiceImpl implements ClienteService {
                     .build();
         }
         return Respuesta.builder()
-                .content(new Object[] { optionalClient.get() })
+                .content(new Object[] { mapper.map(optionalClient.get(), ClienteDto.class) })
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
@@ -248,7 +248,7 @@ public class ClienteServiceImpl implements ClienteService {
                     .build();
         }
         return Respuesta.builder()
-                .content(new Object[] { optionalClient.get() })
+                .content(new Object[] { mapper.map(optionalClient.get(), ClienteRucDto.class) })
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
@@ -275,7 +275,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public List<ClienteDto> findByIdentificacion(String identificacion) {
-        
+
         List<Cliente> lista = repository.findByIdentificacion(identificacion);
         if (lista.isEmpty()) {
             return null;
