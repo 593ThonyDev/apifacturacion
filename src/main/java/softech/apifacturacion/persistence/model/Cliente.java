@@ -37,7 +37,7 @@ public class Cliente {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "identificacion")
-    String Identificacion;
+    String identificacion;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "direccion")

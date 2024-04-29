@@ -10,5 +10,5 @@ public interface UserService {
 
     Respuesta register(UserRequestDto SignUpEmisorDto);
 
-    public UserDto findByLogin(String login);
+    public UserDto findByUsername(String login);
 }

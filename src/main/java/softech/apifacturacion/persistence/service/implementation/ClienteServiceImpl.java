@@ -1,20 +1,20 @@
 package softech.apifacturacion.persistence.service.implementation;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import lombok.*;
 import softech.apifacturacion.persistence.function.Fecha;
-import softech.apifacturacion.persistence.model.Cliente;
-import softech.apifacturacion.persistence.model.Emisor;
-import softech.apifacturacion.persistence.repository.EmisorRepossitory;
-import softech.apifacturacion.persistence.repository.ClienteRepository;
+import softech.apifacturacion.persistence.model.*;
+import softech.apifacturacion.persistence.model.dto.*;
+import softech.apifacturacion.persistence.repository.*;
 import softech.apifacturacion.persistence.service.ClienteService;
-import softech.apifacturacion.response.Respuesta;
-import softech.apifacturacion.response.RespuestaType;
+import softech.apifacturacion.response.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +26,32 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private final EmisorRepossitory emisorRepository;
 
+    @Autowired
+    private final ModelMapper mapper;
+
     @Override
-    public Page<Cliente> getAll(Pageable pageable) {
-        Page<Cliente> pagina = repository.findAll(pageable);
-        if (pagina.isEmpty()) {
+    public Page<ClienteDto> getAll(Pageable pageable) {
+        Page<Cliente> page = repository.findAll(pageable);
+        if (page.isEmpty()) {
             return null;
         }
-        return pagina;
+        return page.map(emisor -> mapper.map(emisor, ClienteDto.class));
+    }
+
+    @Override
+    public Page<ClienteRucDto> getAllByRuc(String ruc, Pageable pageable) {
+        Optional<Emisor> optional = emisorRepository.findByRuc(ruc);
+
+        if (!optional.isPresent()) {
+            return null;
+        }
+
+        Page<Cliente> page = repository.findByFkEmisor(optional.get(), pageable);
+        if (page.isEmpty()) {
+            return null;
+        }
+
+        return page.map(emisor -> mapper.map(emisor, ClienteRucDto.class));
     }
 
     @Override
@@ -233,5 +252,40 @@ public class ClienteServiceImpl implements ClienteService {
                 .type(RespuestaType.SUCCESS)
                 .build();
     }
-    
+
+    @Override
+    public List<ClienteRucDto> findByRucAndIdentificacion(String ruc, String identificacion) {
+
+        Optional<Emisor> optional = emisorRepository.findByRuc(ruc);
+        if (!optional.isPresent()) {
+            return null;
+        }
+
+        List<Cliente> lista = repository.findByIdentificacion(identificacion);
+        if (lista.isEmpty()) {
+            return null;
+        }
+
+        List<ClienteRucDto> listaDto = lista.stream()
+                .map(establecimiento -> mapper.map(establecimiento, ClienteRucDto.class))
+                .collect(Collectors.toList());
+
+        return listaDto;
     }
+
+    @Override
+    public List<ClienteDto> findByIdentificacion(String identificacion) {
+        
+        List<Cliente> lista = repository.findByIdentificacion(identificacion);
+        if (lista.isEmpty()) {
+            return null;
+        }
+
+        List<ClienteDto> listaDto = lista.stream()
+                .map(establecimiento -> mapper.map(establecimiento, ClienteDto.class))
+                .collect(Collectors.toList());
+
+        return listaDto;
+    }
+
+}
