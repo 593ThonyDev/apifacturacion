@@ -12,7 +12,7 @@ public class UserRequestDto {
 
     private Emisor fkEmisor;
     private String username;
-    private char[] password;
+    private String password;
     private String email;
     private String nombres;
     private String apellidos;

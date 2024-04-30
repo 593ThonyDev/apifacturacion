@@ -43,23 +43,23 @@ public class PtoEmision {
     String secuenciaFactura;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "secuenciaLiquidacion")
+    @Column(name = "secuencialiquidacion")
     String secuenciaLiquidacion;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "secuencialCredito")
+    @Column(name = "secuencialcredito")
     String secuencialCredito;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "secuencialDebito")
+    @Column(name = "secuencialdebito")
     String secuencialDebito;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "secuencialRemision")
+    @Column(name = "secuencialremision")
     String secuencialRemision;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "secuencialRetencion")
+    @Column(name = "secuencialretencion")
     String secuencialRetencion;
 
     @Column(name = "status")

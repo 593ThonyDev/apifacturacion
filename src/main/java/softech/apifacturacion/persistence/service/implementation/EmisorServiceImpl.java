@@ -114,7 +114,7 @@ public class EmisorServiceImpl implements EmisorService {
             UserRequestDto user = UserRequestDto.builder()
                     .fkEmisor(emisor)
                     .username(emisor.getRuc())
-                    .password(password.toCharArray())
+                    .password(password)
                     .email(emisor.getCorreoRemitente())
                     .nombres(nombres)
                     .apellidos(apellidos)

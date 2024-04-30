@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import softech.apifacturacion.persistence.enums.Status;
 import softech.apifacturacion.persistence.function.Fecha;
 import softech.apifacturacion.persistence.model.Cajero;
 import softech.apifacturacion.persistence.repository.CajeroRepository;
@@ -50,6 +51,7 @@ public class CajeroServiceImpl implements CajeroService {
         }
 
         cajero.setCreated(new Fecha().fechaCreacion());
+        cajero.setStatus(Status.ONLINE);
 
         repository.save(cajero);
 
@@ -85,6 +87,7 @@ public class CajeroServiceImpl implements CajeroService {
 
         cajero.setEmail(optional.get().getEmail());
         cajero.setCreated(optional.get().getCreated());
+        cajero.setStatus(Status.ONLINE);
 
         repository.save(cajero);
 
