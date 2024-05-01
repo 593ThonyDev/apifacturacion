@@ -26,7 +26,7 @@ public class ClienteController {
     public ResponseEntity<Respuesta> save(
             @RequestParam("ruc") String ruc,
             @RequestParam("nombre") String nombre,
-            @RequestParam("tipoidentificacion") String tipoIdentificacion,
+            @RequestParam("tipoIdentificacion") String tipoIdentificacion,
             @RequestParam("identificacion") String identificacion,
             @RequestParam("direccion") String direccion,
             @RequestParam("email") String email,

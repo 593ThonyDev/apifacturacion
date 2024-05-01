@@ -1,6 +1,8 @@
 package softech.apifacturacion.persistence.function;
 
+import java.text.SimpleDateFormat;
 import java.time.*;
+import java.util.Date;
 
 import lombok.*;
 
@@ -42,6 +44,21 @@ public class Fecha {
         // Compara la fecha dada con la fecha actual, devuelve true si la fecha no es
         // anterior a la actual
         return !fecha.isBefore(ahora);
+    }
+
+    /**
+     * Retorna la fecha actual en el formato "ddMMyyyy" para los comprobantes
+     * electronicos
+     *
+     * @return La fecha actual en formato "ddMMyyyy".
+     */
+    public String getDateDDMMYYYY() {       
+        // Obtener la fecha actual
+        Date fecha = new Date();
+        // Crear un formato de fecha personalizado
+        SimpleDateFormat formato = new SimpleDateFormat("ddMMyyyy");
+        // Retornar la fecha formateada
+        return formato.format(fecha);
     }
 
 }

@@ -22,6 +22,9 @@ public class PtoEmisionServiceImpl implements PtoEmisionService {
         private final PtoEmisionRepository repository;
 
         @Autowired
+        private final EstablecimientoRepository repEstablecimiento;
+
+        @Autowired
         private final EmisorRepossitory repEmisor;
 
         @Autowired
@@ -34,7 +37,7 @@ public class PtoEmisionServiceImpl implements PtoEmisionService {
         private UserService userService;
 
         @Override
-        public Respuesta save(String ruc, PtoEmision ptoEmision) {
+        public Respuesta save(String ruc, PtoEmision ptoEmision, Integer idEstablecimiento) {
 
                 if (ruc.isEmpty()) {
                         return Respuesta.builder()
@@ -108,8 +111,9 @@ public class PtoEmisionServiceImpl implements PtoEmisionService {
                                         .build();
                 }
 
-                Optional<Emisor> optionalEmisor = repEmisor.findByRuc(ruc);
-                if (!optionalEmisor.isPresent()) {
+                Optional<Establecimiento> optionalEstablecimiento = repEstablecimiento
+                                .findById(idEstablecimiento);
+                if (!optionalEstablecimiento.isPresent()) {
                         return Respuesta.builder()
                                         .type(RespuestaType.WARNING)
                                         .message("El emisor no se encuentra registrado")
@@ -130,7 +134,9 @@ public class PtoEmisionServiceImpl implements PtoEmisionService {
                         if (responseCajero.getType() == RespuestaType.SUCCESS) {
                                 UserRequestDto user = UserRequestDto.builder()
                                                 .username(ptoEmision.getFkCajero().getIdentificacion())
-                                                .fkEmisor(Emisor.builder().idEmisor(optionalEmisor.get().getIdEmisor())
+                                                .fkEmisor(Emisor.builder()
+                                                                .idEmisor(optionalEstablecimiento.get().getFkEmisor()
+                                                                                .getIdEmisor())
                                                                 .build())
                                                 .email(ptoEmision.getFkCajero().getEmail())
                                                 .apellidos(ptoEmision.getFkCajero().getApellidos())
@@ -145,7 +151,8 @@ public class PtoEmisionServiceImpl implements PtoEmisionService {
                                         ptoEmision.setNombre(ptoEmision.getFkCajero().getIdentificacion() + " - "
                                                         + ptoEmision.getFkCajero().getApellidos() + " "
                                                         + ptoEmision.getFkCajero().getNombres());
-                                        ptoEmision.setFkEmisor(optionalEmisor.get());
+                                        ptoEmision.setFkEstablecimiento(Establecimiento.builder()
+                                                        .idEstablecimiento(idEstablecimiento).build());
                                         ptoEmision.setFkCajero(
                                                         repCajero.findByIdentificacion(
                                                                         ptoEmision.getFkCajero().getIdentificacion())

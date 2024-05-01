@@ -137,8 +137,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto findByUsername(String login) {
-        User user = userRepository.findByLogin(login)
+    public UserDto findByUsername(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         return userMapper.toUserDto(user);
     }

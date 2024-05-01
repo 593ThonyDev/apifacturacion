@@ -17,7 +17,7 @@ public class Establecimiento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "idestablecimiento ")
+    @Column(name = "idestablecimiento")
     Integer idEstablecimiento;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

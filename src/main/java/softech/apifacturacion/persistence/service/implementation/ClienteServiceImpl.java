@@ -128,6 +128,14 @@ public class ClienteServiceImpl implements ClienteService {
                         .build();
         }
 
+        List<Cliente> optionalCliente = repository.findByIdentificacion(cliente.getIdentificacion());
+        if (optionalCliente.size() > 0) {
+            return Respuesta.builder()
+                    .type(RespuestaType.WARNING)
+                    .message("El cliente ya esta registrado")
+                    .build();
+        }
+        
         repository.save(cliente);
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)

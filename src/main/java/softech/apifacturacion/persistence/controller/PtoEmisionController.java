@@ -18,8 +18,10 @@ public class PtoEmisionController {
     @Autowired
     private PtoEmisionService service;
 
-    @PostMapping("/save/{ruc}")
-    public ResponseEntity<Respuesta> save(@PathVariable("ruc") String ruc,
+    @PostMapping("/save/{ruc}/{establecimiento}")
+    public ResponseEntity<Respuesta> save(
+            @PathVariable("ruc") String ruc,
+            @PathVariable("establecimiento") String establecimiento,
             @RequestParam("nombres") String nombres,
             @RequestParam("apellidos") String apellidos,
             @RequestParam("email") String email,
@@ -51,7 +53,7 @@ public class PtoEmisionController {
                     .fkCajero(cajero)
                     .build();
 
-            Respuesta response = service.save(ruc, ptoEmision);
+            Respuesta response = service.save(ruc, ptoEmision, Integer.parseInt(establecimiento));
             if (response.getType() == RespuestaType.SUCCESS) {
                 return ResponseEntity.ok().body(Respuesta.builder()
                         .message(response.getMessage())

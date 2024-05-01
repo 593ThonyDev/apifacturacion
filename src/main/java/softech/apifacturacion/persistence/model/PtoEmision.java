@@ -22,8 +22,8 @@ public class PtoEmision {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ManyToOne
-    @JoinColumn(name = "fkemisor")
-    Emisor fkEmisor;
+    @JoinColumn(name = "fkestablecimiento")
+    Establecimiento fkEstablecimiento;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ManyToOne

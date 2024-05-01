@@ -6,7 +6,7 @@ import softech.apifacturacion.response.Respuesta;
 
 public interface PtoEmisionService {
 
-    Respuesta save(String ruc, PtoEmision ptoEmision);
+    Respuesta save(String ruc, PtoEmision ptoEmision, Integer idEstablecimiento);
 
     Respuesta changeStatus(String ruc, Integer idPuntoEmision, Status status);
 }

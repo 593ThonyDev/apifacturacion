@@ -24,7 +24,7 @@ public class EmisorController {
     private EmisorService service;
 
     @PatchMapping("/configuration")
-    @PreAuthorize("hasAnyAuthority('EMISOR')")
+    //@PreAuthorize("hasAnyAuthority('EMISOR')")
     public ResponseEntity<Respuesta> configurateEmisor(
             @RequestParam("ruc") String ruc,
             @RequestParam("razonSocial") String razonSocial,

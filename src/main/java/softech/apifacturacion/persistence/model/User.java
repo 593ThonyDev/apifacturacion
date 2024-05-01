@@ -34,10 +34,6 @@ public class User {
     @Column(name = "password")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String password;
-    
-    @Column(name = "login")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String login;
 
     @Column(name = "email")
     @JsonInclude(JsonInclude.Include.NON_NULL)

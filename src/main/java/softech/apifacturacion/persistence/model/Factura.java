@@ -139,10 +139,6 @@ public class Factura {
     Integer firmado;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Column(name = "cargaautomatica")
-    Integer cargaAutomatica;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "observacion")
     String observacion;
 
