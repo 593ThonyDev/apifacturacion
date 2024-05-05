@@ -12,7 +12,7 @@ public interface FacturaService {
 
     Respuesta update(Factura factura);
 
-    Boolean createXML(String ruc, String cliente, String claveAcceso);
+    Respuesta createXML(String ruc, String cliente, String claveAcceso);
 
     Boolean firmarXML(String ruc, String cliente, String claveAcceso);
 

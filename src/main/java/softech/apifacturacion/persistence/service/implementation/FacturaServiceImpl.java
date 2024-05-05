@@ -1,8 +1,13 @@
 package softech.apifacturacion.persistence.service.implementation;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +40,9 @@ public class FacturaServiceImpl implements FacturaService {
 
     @Autowired
     private final DetalleFacturaRepository detalleFacturaRepository;
+
+    @Value("${upload.directory}")
+    private String uploadDirectory;
 
     @Override
     public Respuesta save(String ruc, String cajIdentificacion, String cliIdentificacion, Factura factura,
@@ -149,6 +157,8 @@ public class FacturaServiceImpl implements FacturaService {
         /*
          * CONFIGURAR LA FACTURA
          */
+        // AGREGAR FECHA EMISION
+        factura.setFechaemision(new Fecha().fechaCreacion());
         // AGREGAR EL PUNTO DE EMISIÓN
         factura.setFkPtoEmision(ptoOptional.get());
         // AGREGAR EL CLIENTE
@@ -296,10 +306,22 @@ public class FacturaServiceImpl implements FacturaService {
         ptoEmision.setSecuenciaFactura(generarSecuencial(Integer.parseInt(ptoOptional.get().getSecuenciaFactura())));
         ptoEmisionRepository.save(ptoEmision);
 
-        return Respuesta.builder()
-                .type(RespuestaType.SUCCESS)
-                .message("Factura guardada correctamente")
-                .build();
+        Respuesta response = createXML(ruc, facturaOptional.get().getFkCliente().getIdentificacion(),
+                facturaOptional.get().getClaveAcceso());
+
+        if (response.getType() == RespuestaType.SUCCESS) {
+            return Respuesta.builder()
+                    .type(RespuestaType.SUCCESS)
+                    .message("Factura guardada correctamente")
+                    .build();
+
+        } else {
+            return Respuesta.builder()
+                    .type(RespuestaType.SUCCESS)
+                    .message("Factura no se guardo correctamente")
+                    .build();
+
+        }
     }
 
     @Override
@@ -323,8 +345,238 @@ public class FacturaServiceImpl implements FacturaService {
     }
 
     @Override
-    public Boolean createXML(String ruc, String cliente, String claveAcceso) {
-        return null;
+    public Respuesta createXML(String ruc, String cliente, String claveAcceso) {
+        // VALIDAR SI LOS DATOS DE LA FACTURA CON LA BASE DE DATOS PARA GENERAR EL XML
+        Optional<Factura> factura = facturaRepository.findByClaveAcceso(claveAcceso);
+        if (!factura.isPresent()) {
+            return Respuesta.builder()
+                    .message("No existe la factura registrada")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
+        // VALIDAR SI EL RUC CORRESPONDE A LA FACTURA
+        if (!factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc().equals(ruc)) {
+            return Respuesta.builder()
+                    .message("El ruc no corresponde a la factura")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
+        // VALIDAR LOS DATOS DEL CLIENTE CON LA FACTURA
+        if (!factura.get().getFkCliente().getIdentificacion().equals(cliente)) {
+            return Respuesta.builder()
+                    .message("El cliente no corresponde a la factura")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
+        List<DetalleFactura> listaDetalle = detalleFacturaRepository.findByFkFactura(factura.get());
+
+        try {
+
+            StringBuilder build = new StringBuilder();
+            // Obtener la fecha de emisión como un objeto ZonedDateTime
+            ZonedDateTime fechaEmisionZoned = factura.get().getFechaemision();
+
+            // Convertir la fecha de ZonedDateTime a Date
+            Date fechaEmisionDate = Date.from(fechaEmisionZoned.toInstant());
+
+            // Formatear la fecha de emisión
+            SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+            String fechaEmisionFormateada = formato.format(fechaEmisionDate);
+
+            build.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+            build.append("<factura id=\"comprobante\" version=\"1.1.0\">\n");
+
+            // Información tributaria
+            build.append("<infoTributaria>\n");
+            build.append("    <ambiente>").append(factura.get().getAmbiente()).append("</ambiente>\n");
+            build.append("    <tipoEmision>1</tipoEmision>\n");
+            build.append("    <razonSocial>")
+                    .append(
+                            factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRazonSocial())
+                    .append("</razonSocial>\n");
+            build.append("    <nombreComercial>")
+                    .append(
+                            factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getNombreComercial())
+                    .append("</nombreComercial>\n");
+            build.append("    <ruc>")
+                    .append(
+                            factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc())
+                    .append("</ruc>\n");
+            build.append("    <claveAcceso>").append(claveAcceso).append("</claveAcceso>\n");
+            build.append("    <codDoc>01</codDoc>\n");
+            build.append("    <estab>").append(factura.get().getFkPtoEmision().getFkEstablecimiento().getCodigo())
+                    .append("</estab>\n");
+            build.append("    <ptoEmi>").append(factura.get().getFkPtoEmision().getCodigo()).append("</ptoEmi>\n");
+            build.append("    <secuencial>").append(factura.get().getSecuencial()).append("</secuencial>\n");
+            build.append("    <dirMatriz>")
+                    .append(
+                            factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getDireccionMatriz())
+                    .append("</dirMatriz>\n");
+            build.append("</infoTributaria>\n");
+
+            // Información de la factura
+            build.append("<infoFactura>\n");
+            build.append("    <fechaEmision>").append(fechaEmisionFormateada)
+                    .append("</fechaEmision>\n");
+            build.append("    <dirEstablecimiento>")
+                    .append(factura.get().getFkPtoEmision().getFkEstablecimiento().getDireccion())
+                    .append("</dirEstablecimiento>\n");
+            build.append("    <contribuyenteEspecial>0047</contribuyenteEspecial>\n");
+            build.append("    <obligadoContabilidad>").append(
+                    factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getObligadoContabilidad())
+                    .append("</obligadoContabilidad>\n");
+            build.append("    <tipoIdentificacionComprador>")
+                    .append(factura.get().getFkCliente().getTipoIdentificacion())
+                    .append("</tipoIdentificacionComprador>\n");
+            build.append("    <razonSocialComprador>")
+                    .append(factura.get().getFkCliente().getNombre())
+                    .append("</razonSocialComprador>\n");
+            build.append("    <identificacionComprador>")
+                    .append(factura.get().getFkCliente().getIdentificacion())
+                    .append("</identificacionComprador>\n");
+            build.append("    <totalSinImpuestos>").append(factura.get().getSubTotal())
+                    .append("</totalSinImpuestos>\n");
+            build.append("    <totalDescuento>").append(factura.get().getTotaldescuento())
+                    .append("</totalDescuento>\n");
+            build.append("    <totalConImpuestos>\n");
+            build.append("        <totalImpuesto>\n");
+            /*
+             * Aqui viene la configuracion del impuesto actual
+             */
+            build.append("            <codigo>4</codigo>\n");
+            
+            build.append("            <codigoPorcentaje>2</codigoPorcentaje>\n");
+            build.append("            <baseImponible>").append(factura.get().getTotalSinImpuestos())
+                    .append("</baseImponible>\n");
+            build.append("            <tarifa>12.00</tarifa>\n");
+            build.append("            <valor>").append(factura.get().getIva()).append("</valor>\n");
+            build.append("        </totalImpuesto>\n");
+            build.append("    </totalConImpuestos>\n");
+            build.append("    <propina>0</propina>\n");
+            build.append("    <importeTotal>").append(factura.get().getValorTotal())
+                    .append("</importeTotal>\n");
+            build.append("    <moneda>USD</moneda>\n");
+            build.append("    <pagos>\n");
+            build.append("        <pago>\n");
+            build.append("            <formaPago>" + factura.get().getFormaPago() + "</formaPago>\n");
+            build.append("            <total>").append(factura.get().getValorTotal()).append("</total>\n");
+            build.append("            <plazo>")
+                    .append(factura.get().getPlazo() == null ? "0" : factura.get().getPlazo()).append("</plazo>\n");
+            build.append("            <unidadTiempo>").append("dias").append("</unidadTiempo>\n");
+            build.append("        </pago>\n");
+            build.append("    </pagos>\n");
+            build.append("    <valorRetIva>0.00</valorRetIva>\n");
+            build.append("    <valorRetRenta>0.00</valorRetRenta>\n");
+            build.append("</infoFactura>\n");
+
+            // Detalles de la factura
+            build.append("<detalles>\n");
+            for (DetalleFactura detalle : listaDetalle) {
+                Optional<Producto> productoOptional = productoRepository
+                        .findById(detalle.getFkProducto().getIdProducto());
+                Producto producto = productoOptional.get();
+                build.append("    <detalle>\n");
+                build.append("        <codigoPrincipal>").append(producto.getCodPrincipal())
+                        .append("</codigoPrincipal>\n");
+                build.append("        <descripcion>").append(producto.getNombre()).append("</descripcion>\n");
+                build.append("        <cantidad>").append(detalle.getCantidad()).append("</cantidad>\n");
+                build.append("        <precioUnitario>").append(detalle.getPrecioUnitario())
+                        .append("</precioUnitario>\n");
+                build.append("        <descuento>")
+                        .append(detalle.getDescuento() == null ? "0.00" : detalle.getDescuento())
+                        .append("</descuento>\n");
+                build.append("        <precioTotalSinImpuesto>").append(detalle.getPrecioUnitario())
+                        .append("</precioTotalSinImpuesto>\n");
+                build.append("        <impuestos>\n");
+
+                // Impuesto IVA
+                if (detalle.getIva() != null && producto.getFkIva() != null) {
+                    build.append("            <impuesto>\n");
+                    build.append("                <codigo>").append(producto.getFkIva().getCodigoPorcentaje())
+                            .append("</codigo>\n");
+                    build.append("                <codigoPorcentaje>").append(producto.getFkIva().getCodigoPorcentaje())
+                            .append("</codigoPorcentaje>\n");
+                    build.append("                <tarifa>").append(producto.getFkIva().getTarifa())
+                            .append("</tarifa>\n");
+                    double baseImponibleIVA = detalle.getCantidad() * detalle.getPrecioUnitario();
+                    double valorImpuestoIVA = baseImponibleIVA * (producto.getFkIva().getTarifa() / 100);
+                    build.append("                <baseImponible>").append(baseImponibleIVA)
+                            .append("</baseImponible>\n");
+                    build.append("                <valor>").append(valorImpuestoIVA).append("</valor>\n");
+                    build.append("            </impuesto>\n");
+                }
+
+                // Impuesto ICE
+                if (detalle.getIce() != null && producto.getFkIce() != null) {
+                    build.append("            <impuesto>\n");
+                    build.append("                <codigo>").append(producto.getFkIce().getCodigoPorcentaje())
+                            .append("</codigo>\n");
+                    // Agrega aquí los campos correspondientes al ICE
+                    build.append("            </impuesto>\n");
+                }
+
+                // Impuesto IRBPNR
+                if (producto.getFkIrbpnr() != null) {
+                    build.append("            <impuesto>\n");
+                    build.append("                <codigo>").append(producto.getFkIrbpnr().getCodigoPorcentaje())
+                            .append("</codigo>\n");
+                    // Agrega aquí los campos correspondientes al IRBPNR
+                    build.append("            </impuesto>\n");
+                }
+
+                build.append("        </impuestos>\n");
+                build.append("    </detalle>\n");
+            }
+            build.append("</detalles>\n");
+
+            // Información adicional
+            build.append("<infoAdicional>\n");
+            build.append("    <campoAdicional nombre=\"DIRECCION\">")
+                    .append(factura.get().getFkCliente().getDireccion())
+                    .append("</campoAdicional>\n");
+            build.append("    <campoAdicional nombre=\"E-MAIL\">").append(factura.get().getFkCliente().getEmail())
+                    .append("</campoAdicional>\n");
+            build.append("    <campoAdicional nombre=\"TELEFONO\">").append(factura.get().getFkCliente().getTelefono())
+                    .append("</campoAdicional>\n");
+            build.append("    <campoAdicional nombre=\"PLAZO\">").append("</campoAdicional>\n");
+            build.append("    <campoAdicional nombre=\"DIAS\">")
+                    .append(factura.get().getPlazo() == null ? "0" : factura.get().getPlazo())
+                    .append("</campoAdicional>\n");
+            build.append("</infoAdicional>\n");
+            build.append("</factura>");
+
+            // Imprime el XML de la factura
+            String xml = build.toString();
+
+            // Nombre del archivo XML
+            String nombreArchivo = "FACT_" + claveAcceso + ".xml";
+
+            // Guardar el XML en un archivo dentro de la carpeta
+            File carpeta = new File(uploadDirectory + "/"
+                    + factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc() + "/Clientes/"
+                    + factura.get().getFkCliente().getIdentificacion()
+                    + "/Facturas/" + factura.get().getClaveAcceso());
+            if (!carpeta.exists()) {
+                carpeta.mkdirs(); // Crear la carpeta si no existe
+            }
+
+            File archivo = new File(carpeta, nombreArchivo);
+            FileWriter writer = new FileWriter(archivo);
+            writer.write(build.toString());
+            writer.close();
+
+        } catch (Exception ex) {
+            System.out.println("ERROR EN LA GENERACION DE XML FACTURA: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        return Respuesta.builder()
+                .type(RespuestaType.SUCCESS)
+                .message("XML DE FACTURA REALIZADA CON EXITO")
+                .build();
     }
 
     @Override
