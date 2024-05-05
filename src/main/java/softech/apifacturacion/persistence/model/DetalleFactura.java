@@ -26,7 +26,7 @@ public class DetalleFactura {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ManyToOne
-    @JoinColumn(name = "fkFactura")
+    @JoinColumn(name = "fkfactura")
     Factura fkFactura;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -35,11 +35,11 @@ public class DetalleFactura {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "nombre")
-    Integer nombre;
+    String nombre;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "codigo")
-    Integer codigo;
+    String codigo;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "preciounitario")

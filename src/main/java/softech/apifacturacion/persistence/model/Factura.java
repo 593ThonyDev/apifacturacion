@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import jakarta.persistence.*;
 import lombok.*;
-import softech.apifacturacion.persistence.enums.Status;
+import softech.apifacturacion.persistence.enums.ComprobanteStatus;
 
 @Data
 @Builder
@@ -29,11 +29,6 @@ public class Factura {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ManyToOne
-    @JoinColumn(name = "fkestablecimiento")
-    Establecimiento fkEstablecimiento;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @ManyToOne
     @JoinColumn(name = "fkcliente")
     Cliente fkCliente;
 
@@ -52,7 +47,7 @@ public class Factura {
     @Column(name = "status")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Enumerated(EnumType.STRING)
-    Status status;
+    ComprobanteStatus status;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "ambiente")

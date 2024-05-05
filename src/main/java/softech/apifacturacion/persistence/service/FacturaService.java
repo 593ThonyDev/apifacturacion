@@ -7,9 +7,8 @@ import softech.apifacturacion.response.Respuesta;
 
 public interface FacturaService {
 
-    Respuesta generateClaveAcceso(String ruc, PtoEmision ptoEmision);
-
-    Respuesta save(Factura factura);
+    Respuesta save(String ruc, String cajIdentificacion, String cliIdentificacion, Factura factura,
+            DetalleFactura[] detalleFacturas);
 
     Respuesta update(Factura factura);
 
