@@ -300,10 +300,11 @@ public class EmisorServiceImpl implements EmisorService {
         }
 
         optional.get().setStatus(status);
+        repository.save(optional.get());
 
         return Respuesta.builder()
                 .type(RespuestaType.SUCCESS)
-                .message("Estado del emisor actualizado correctamente")
+                .message("Estado del emisor actualizado a " + status.toString() + " correctamente")
                 .build();
     }
 
@@ -321,7 +322,7 @@ public class EmisorServiceImpl implements EmisorService {
     public Respuesta getDataByRuc(String ruc) {
 
         Optional<Emisor> optional = repository.findByRuc(ruc);
-        
+
         if (!optional.isPresent()) {
             return Respuesta.builder()
                     .type(RespuestaType.WARNING)

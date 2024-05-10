@@ -310,14 +310,25 @@ public class FacturaServiceImpl implements FacturaService {
                 facturaOptional.get().getClaveAcceso());
 
         if (response.getType() == RespuestaType.SUCCESS) {
-            return Respuesta.builder()
-                    .type(RespuestaType.SUCCESS)
-                    .message("Factura guardada correctamente")
-                    .build();
+            Respuesta firmaResponse = firmarXML(ruc, clienteOptional.get().getIdentificacion(),
+                    facturaOptional.get().getClaveAcceso());
+
+            if (firmaResponse.getType() == RespuestaType.SUCCESS) {
+
+                return Respuesta.builder()
+                        .type(RespuestaType.SUCCESS)
+                        .message("Factura guardada correctamente")
+                        .build();
+            } else {
+                return Respuesta.builder()
+                        .type(RespuestaType.WARNING)
+                        .message(firmaResponse.getMessage())
+                        .build();
+            }
 
         } else {
             return Respuesta.builder()
-                    .type(RespuestaType.SUCCESS)
+                    .type(RespuestaType.WARNING)
                     .message("Factura no se guardo correctamente")
                     .build();
 
@@ -447,7 +458,7 @@ public class FacturaServiceImpl implements FacturaService {
              * Aqui viene la configuracion del impuesto actual
              */
             build.append("            <codigo>4</codigo>\n");
-            
+
             build.append("            <codigoPorcentaje>2</codigoPorcentaje>\n");
             build.append("            <baseImponible>").append(factura.get().getTotalSinImpuestos())
                     .append("</baseImponible>\n");
@@ -548,9 +559,6 @@ public class FacturaServiceImpl implements FacturaService {
             build.append("</infoAdicional>\n");
             build.append("</factura>");
 
-            // Imprime el XML de la factura
-            String xml = build.toString();
-
             // Nombre del archivo XML
             String nombreArchivo = "FACT_" + claveAcceso + ".xml";
 
@@ -580,8 +588,61 @@ public class FacturaServiceImpl implements FacturaService {
     }
 
     @Override
-    public Boolean firmarXML(String ruc, String cliente, String claveAcceso) {
-        return null;
+    public Respuesta firmarXML(String ruc, String cliente, String claveAcceso) {
+        // VALIDAR SI LOS DATOS DE LA FACTURA CON LA BASE DE DATOS PARA GENERAR EL XML
+        Optional<Factura> factura = facturaRepository.findByClaveAcceso(claveAcceso);
+        if (!factura.isPresent()) {
+            return Respuesta.builder()
+                    .message("No existe la factura registrada")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
+        // VALIDAR SI EL RUC CORRESPONDE A LA FACTURA
+        if (!factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc().equals(ruc)) {
+            return Respuesta.builder()
+                    .message("El ruc no corresponde a la factura")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+
+        // VALIDAR LOS DATOS DEL CLIENTE CON LA FACTURA
+        if (!factura.get().getFkCliente().getIdentificacion().equals(cliente)) {
+            return Respuesta.builder()
+                    .message("El cliente no corresponde a la factura")
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+        try {
+            XAdESBESSignature.firmar(
+                    uploadDirectory + "/"
+                            + factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc()
+                            + "/Clientes/"
+                            + factura.get().getFkCliente().getIdentificacion()
+                            + "/Facturas/" + factura.get().getClaveAcceso() + "/" + "FACT_" + claveAcceso + ".xml",
+                    uploadDirectory + "/"
+                            + factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc()
+                            + "/configuration/"
+                            + factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getDirFirma(),
+                    factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getPassFirma(),
+                    uploadDirectory + "/"
+                            + factura.get().getFkPtoEmision().getFkEstablecimiento().getFkEmisor().getRuc()
+                            + "/Clientes/"
+                            + factura.get().getFkCliente().getIdentificacion()
+                            + "/Facturas/" + factura.get().getClaveAcceso(),
+                    "FACT_" + claveAcceso + ".xml");
+
+        } catch (Exception e) {
+            return Respuesta.builder()
+                    .message(e.toString())
+                    .type(RespuestaType.WARNING)
+                    .build();
+        }
+        return Respuesta.builder()
+                .message("Factura firmada correctamente")
+                .type(RespuestaType.SUCCESS)
+                .build();
+
     }
 
     @Override

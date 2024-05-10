@@ -7,13 +7,17 @@ import softech.apifacturacion.persistence.model.dto.UserDto;
 import softech.apifacturacion.response.Respuesta;
 
 public interface UserService {
-    public UserDto login(CredentialsDto credentialsDto);
+
+    Respuesta login(CredentialsDto credentialsDto);
 
     Respuesta register(UserRequestDto UserRequestDto);
+
+    Respuesta registerAdmin(UserRequestDto UserRequestDto);
 
     Respuesta changeStatus(String username, UserStatus status);
 
     Respuesta registerPasswordShow(UserRequestDto UserRequestDto);
 
     public UserDto findByUsername(String login);
+
 }

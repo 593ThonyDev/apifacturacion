@@ -14,7 +14,7 @@ public interface FacturaService {
 
     Respuesta createXML(String ruc, String cliente, String claveAcceso);
 
-    Boolean firmarXML(String ruc, String cliente, String claveAcceso);
+    Respuesta firmarXML(String ruc, String cliente, String claveAcceso);
 
     Respuesta enviarSRI(String claveAcceso);
 

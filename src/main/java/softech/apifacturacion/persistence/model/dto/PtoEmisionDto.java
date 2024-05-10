@@ -1,27 +1,25 @@
-package softech.apifacturacion.response;
+package softech.apifacturacion.persistence.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.*;
-import jakarta.persistence.*;
+import softech.apifacturacion.persistence.enums.Status;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Respuesta {
+public class PtoEmisionDto {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Object user;
+    Integer idPtoemision;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String message;
+    String nombre;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Object[] content;
+    String codigo;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Enumerated(EnumType.STRING)
-    RespuestaType type;
-
+    Status status;
 }

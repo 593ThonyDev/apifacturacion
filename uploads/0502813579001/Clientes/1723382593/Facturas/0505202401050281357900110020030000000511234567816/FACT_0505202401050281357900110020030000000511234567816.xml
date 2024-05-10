@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<factura id="comprobante" version="1.1.0">
+<infoTributaria>
+    <ambiente>1</ambiente>
+    <tipoEmision>1</tipoEmision>
+    <razonSocial>DISTRIBUIDORA JV</razonSocial>
+    <nombreComercial>DISTRIBUIDORA JV</nombreComercial>
+    <ruc>0502813579001</ruc>
+    <claveAcceso>0505202401050281357900110020030000000511234567816</claveAcceso>
+    <codDoc>01</codDoc>
+    <estab>002</estab>
+    <ptoEmi>003</ptoEmi>
+    <secuencial>000000051</secuencial>
+    <dirMatriz>ATENAS B S51-66 Y PEDRO CONCHA QUITO - ECUADOR</dirMatriz>
+</infoTributaria>
+<infoFactura>
+    <fechaEmision>05/05/2024</fechaEmision>
+    <dirEstablecimiento>Quito</dirEstablecimiento>
+    <contribuyenteEspecial>0047</contribuyenteEspecial>
+    <obligadoContabilidad>NO</obligadoContabilidad>
+    <tipoIdentificacionComprador>05</tipoIdentificacionComprador>
+    <razonSocialComprador>Richard Pérez</razonSocialComprador>
+    <identificacionComprador>1723382593</identificacionComprador>
+    <totalSinImpuestos>71.1</totalSinImpuestos>
+    <totalDescuento>0.0</totalDescuento>
+    <totalConImpuestos>
+        <totalImpuesto>
+            <codigo>4</codigo>
+            <codigoPorcentaje>2</codigoPorcentaje>
+            <baseImponible>71.1</baseImponible>
+            <tarifa>12.00</tarifa>
+            <valor>6.165</valor>
+        </totalImpuesto>
+    </totalConImpuestos>
+    <propina>0</propina>
+    <importeTotal>77.265</importeTotal>
+    <moneda>USD</moneda>
+    <pagos>
+        <pago>
+            <formaPago>01</formaPago>
+            <total>77.265</total>
+            <plazo>0</plazo>
+            <unidadTiempo>dias</unidadTiempo>
+        </pago>
+    </pagos>
+    <valorRetIva>0.00</valorRetIva>
+    <valorRetRenta>0.00</valorRetRenta>
+</infoFactura>
+<detalles>
+    <detalle>
+        <codigoPrincipal>pro3</codigoPrincipal>
+        <descripcion>Producto 3</descripcion>
+        <cantidad>2</cantidad>
+        <precioUnitario>10.55</precioUnitario>
+        <descuento>0.00</descuento>
+        <precioTotalSinImpuesto>10.55</precioTotalSinImpuesto>
+        <impuestos>
+            <impuesto>
+                <codigo>04</codigo>
+                <codigoPorcentaje>04</codigoPorcentaje>
+                <tarifa>15.0</tarifa>
+                <baseImponible>21.1</baseImponible>
+                <valor>3.165</valor>
+            </impuesto>
+        </impuestos>
+    </detalle>
+    <detalle>
+        <codigoPrincipal>pro2</codigoPrincipal>
+        <descripcion>Producto 2</descripcion>
+        <cantidad>2</cantidad>
+        <precioUnitario>10.0</precioUnitario>
+        <descuento>0.00</descuento>
+        <precioTotalSinImpuesto>10.0</precioTotalSinImpuesto>
+        <impuestos>
+            <impuesto>
+                <codigo>04</codigo>
+                <codigoPorcentaje>04</codigoPorcentaje>
+                <tarifa>15.0</tarifa>
+                <baseImponible>20.0</baseImponible>
+                <valor>3.0</valor>
+            </impuesto>
+        </impuestos>
+    </detalle>
+    <detalle>
+        <codigoPrincipal>pro4</codigoPrincipal>
+        <descripcion>Producto 4</descripcion>
+        <cantidad>3</cantidad>
+        <precioUnitario>10.0</precioUnitario>
+        <descuento>0.00</descuento>
+        <precioTotalSinImpuesto>10.0</precioTotalSinImpuesto>
+        <impuestos>
+        </impuestos>
+    </detalle>
+</detalles>
+<infoAdicional>
+    <campoAdicional nombre="DIRECCION">Quitumbe</campoAdicional>
+    <campoAdicional nombre="E-MAIL">alessiaperezpalacios@gmail.com</campoAdicional>
+    <campoAdicional nombre="TELEFONO">0987654321</campoAdicional>
+    <campoAdicional nombre="PLAZO"></campoAdicional>
+    <campoAdicional nombre="DIAS">0</campoAdicional>
+</infoAdicional>
+</factura>

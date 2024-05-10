@@ -5,6 +5,7 @@ import softech.apifacturacion.persistence.model.Emisor;
 import softech.apifacturacion.persistence.model.Plan;
 import softech.apifacturacion.persistence.model.dto.CredentialsDto;
 import softech.apifacturacion.persistence.model.dto.UserDto;
+import softech.apifacturacion.persistence.model.dto.UserRequestDto;
 import softech.apifacturacion.persistence.service.EmisorService;
 import softech.apifacturacion.persistence.service.UserService;
 import softech.apifacturacion.response.*;
@@ -66,18 +67,72 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<Respuesta> login(@RequestBody CredentialsDto credentialsDto) {
-        try {
-            UserDto userDto = userService.login(credentialsDto);
+    @PostMapping("/register")
+    public ResponseEntity<Respuesta> registerAdmin(
+            @RequestParam("cedula") String cedula,
+            @RequestParam("nombres") String nombres,
+            @RequestParam("apellidos") String apellidos,
+            @RequestParam("email") String email) {
 
-            String token = userAuthenticationProvider.createToken(userDto);
-            userDto.setToken(token);
-            return ResponseEntity.ok(Respuesta.builder()
-                    .content(new Object[] { userDto }).build());
+        try {
+
+            UserRequestDto user = UserRequestDto.builder()
+                    .username(cedula)
+                    .email(email)
+                    .nombres(nombres)
+                    .apellidos(apellidos)
+                    .build();
+
+            Respuesta response = userService.registerAdmin(user);
+
+            if (response.getType() == RespuestaType.SUCCESS) {
+                return ResponseEntity.ok().body(Respuesta.builder()
+                        .message(response.getMessage())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(Respuesta.builder()
+                        .message(response.getMessage())
+                        .build());
+            }
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage().toString());
+            return ResponseEntity.internalServerError().body(Respuesta.builder()
+                    .message("Error interno del servidor: " + e)
+                    .build());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Respuesta> login(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password) {
+        try {
+            CredentialsDto credentials = CredentialsDto.builder()
+                    .username(username)
+                    .password(password)
+                    .build();
+
+            Respuesta response = userService.login(credentials);
+
+            if (response.getType() == RespuestaType.SUCCESS) {
+                UserDto userDto = (UserDto) response.getUser();
+
+                String token = userAuthenticationProvider.createToken(userDto);
+                userDto.setToken(token);
+                return ResponseEntity.ok(Respuesta.builder()
+                        .user(response.getUser())
+                        .content(response.getContent())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(Respuesta.builder()
+                        .message(response.getMessage())
+                        .build());
+            }
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Respuesta.builder().message(e.toString()).build());
+            return ResponseEntity.badRequest().body(Respuesta.builder()
+                    .message(e.getMessage().toString())
+                    .build());
         }
     }
 

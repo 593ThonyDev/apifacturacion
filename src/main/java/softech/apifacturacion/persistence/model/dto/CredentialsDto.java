@@ -9,6 +9,6 @@ import lombok.*;
 public class CredentialsDto {
 
     private String username;
-    private char[] password;
+    private String password;
 
 }
